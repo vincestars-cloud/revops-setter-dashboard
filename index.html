@@ -278,7 +278,7 @@
   <div class="main">
     <div class="top">
       <button class="burger" onclick="document.getElementById('sidebar').classList.toggle('open')"><svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
-      <div><h1 id="vTitle">Appointment Setter Dashboard</h1><div class="sub" id="vSub">You + the setter team · gamified</div></div>
+      <div><h1 id="vTitle">Appointment Setter Dashboard</h1><div class="sub" id="vSub"></div></div>
       <div class="spacer"></div>
       <div class="timeseg" id="timeseg"><button>Today</button><button class="on">Week</button><button>Month</button><button>Quarter</button></div>
       <div class="live"><span class="dot"></span>LIVE</div>
@@ -330,13 +330,13 @@
 
       <!-- ===== SETTERS ===== -->
       <section class="view on" id="view-setters">
-        <div class="section-h"><h2>Setter Leaderboard</h2><span class="hint">Ranked by appointments booked · tap a setter below for their breakdown</span></div>
+        <div class="section-h"><h2>Setter Leaderboard</h2><span class="hint"></span></div>
         <div class="grid" style="grid-template-columns:1.5fr 1fr">
           <div class="card"><div class="eyebrow">Podium · appointments booked</div><div class="podium" id="podSet"></div></div>
           <div class="card"><div class="eyebrow">Appointments by Setter</div><div class="tubes" id="tubes"></div><div class="cap" style="text-align:center;margin-top:10px"><span style="color:var(--warn)">▬</span> monthly target line</div></div>
         </div>
 
-        <div class="section-h"><h2>Team Metrics</h2><span class="hint">Visible to all setters</span></div>
+        <div class="section-h"><h2>Team Metrics</h2><span class="hint"></span></div>
         <div class="grid g4" style="margin-bottom:16px">
           <div class="card kpi"><div class="eyebrow">Appointments Set</div><div class="val" id="kAppts">7</div></div>
           <div class="card kpi"><div class="eyebrow">Total Dials</div><div class="val" id="kDials">130</div></div>
@@ -625,7 +625,7 @@
   function toggleTheme(){setTheme(theme==='dark'?'light':'dark')}
 
   // ---- Nav ----
-  var titles={team:['Team Dashboard','Visible to the whole team · live'],setters:['Appointment Setter Dashboard','You + the setter team · gamified'],sales:['Sales Dashboard','You + the closing team'],marketing:['Marketing Dashboard','You + marketing'],owner:['Owner Dashboard','Private · owner only'],connections:['Connections','Live data sources & sync health']};
+  var titles={team:['Team Dashboard','Visible to the whole team · live'],setters:['Appointment Setter Dashboard',''],sales:['Sales Dashboard','You + the closing team'],marketing:['Marketing Dashboard','You + marketing'],owner:['Owner Dashboard','Private · owner only'],connections:['Connections','Live data sources & sync health']};
   document.querySelectorAll('.nlink').forEach(function(l){l.addEventListener('click',function(){
     document.querySelectorAll('.nlink').forEach(function(x){x.classList.remove('active')});l.classList.add('active');
     var v=l.dataset.view;document.querySelectorAll('.view').forEach(function(s){s.classList.remove('on')});
@@ -712,8 +712,8 @@
          '<div class="amt r'+(idx+1)+'">'+valFn(s)+'</div>'+
          '<div class="plinth" style="height:'+(first?46:idx===1?34:24)+'px">'+(idx+1)+'</div></div>';});
     el.innerHTML=h;}
-  function tubes(){var el=document.getElementById('tubes'),h='',tgt=MONTHLY_TARGET;
-    setters.forEach(function(s){var pct=Math.round(s.appts/maxAppts*100),tl=Math.min(Math.round(tgt/maxAppts*100),100);
+  function tubes(){var el=document.getElementById('tubes'),h='',tgt=MONTHLY_TARGET,scale=Math.max(maxAppts,tgt)||1;
+    setters.forEach(function(s){var pct=Math.round(s.appts/scale*100),tl=Math.min(Math.round(tgt/scale*100),96);
       h+='<div class="tube-c"><div class="tube-v">'+s.appts+'</div><div class="tube"><i style="height:'+pct+'%"></i><div class="tline" style="bottom:'+tl+'%"></div></div>'+avatar(s,30,null,null)+'</div>';});
     el.innerHTML=h;}
 
