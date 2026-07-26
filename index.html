@@ -653,6 +653,7 @@
   function dNetHr(s){return s.hrs?(s.won*UNIT_PRICE - dBonus(s) - s.hrs*HOURLY_WAGE)/s.hrs:0}
   var TARGETS={pph:2,show:65,close:30}; // editable thresholds
   function hue(v,tgt){var r=tgt?v/tgt:0;return r>=1?"good":(r>=0.7?"warn":"bad");}
+  function dow(ds){var x=new Date(ds+"T12:00:00");return isNaN(x)?"":["Su","Mo","Tu","We","Th","Fr","Sa"][x.getDay()];}
 
   // ---- Period + pace ----
   var PERIODS={Today:0.045,Week:0.23,Month:1,Quarter:3.05},PF=1,PLABEL='Month';
@@ -719,14 +720,14 @@
     for(var k in s.disp){dl+='<div class="hb"><span>'+k+'</span><div class="tr"><i style="width:'+Math.round(s.disp[k]/dmax*100)+'%;background:'+dc[di%5]+'"></i></div><span class="n">'+s.disp[k]+'</span></div>';di++}
     var ol='',omax=Math.max.apply(null,Object.keys(s.obj).map(function(k){return s.obj[k]}))||1;
     for(var o in s.obj){ol+='<div class="hb"><span style="font-size:11px">'+(objLabels[o]||o)+'</span><div class="tr"><i style="width:'+Math.round(s.obj[o]/omax*100)+'%;background:var(--c4)"></i></div><span class="n">'+s.obj[o]+'</span></div>'}
-    var hm='';if(s.heat&&s.heat.length){var hmax=Math.max.apply(null,s.heat)||1;for(var q=0;q<s.heat.length;q++){var hv=s.heat[q];var op=hv?(0.18+0.82*hv/hmax):0.05;hm+='<div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px"><span style="font-size:9px;color:var(--ink-3);font-family:var(--mono)">'+(hv||'')+'</span><div title="'+hv+' dials" style="width:100%;height:'+(6+Math.round((hv/hmax)*26))+'px;border-radius:3px;background:rgba(77,155,255,'+op.toFixed(2)+')"></div></div>';}}
+    var hm='';if(s.heat&&s.heat.length){var hmax=Math.max.apply(null,s.heat)||1;for(var q=0;q<s.heat.length;q++){var hv=s.heat[q];var op=hv?(0.18+0.82*hv/hmax):0.05;hm+='<div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px"><span style="font-size:9px;color:var(--ink-3);font-family:var(--mono)">'+(hv||'')+'</span><div title="'+hv+' dials" style="width:100%;height:'+(6+Math.round((hv/hmax)*26))+'px;border-radius:3px;background:rgba(77,155,255,'+op.toFixed(2)+')"></div><span style="font-size:8px;color:var(--ink-3);margin-top:2px">'+((window.__heatDays&&window.__heatDays[q])?dow(window.__heatDays[q]):'')+'</span></div>';}}
     el.innerHTML='<div style="display:flex;align-items:center;gap:13px;margin-bottom:4px">'+avatar(s,48,null,null)+'<div><b style="font-size:16px">'+s.nm+'</b><div class="cap"><span class="pill '+statusMap[s.status]+'"><i></i>'+s.status+'</span> · '+s.uid+'</div></div>'+
       '<div style="margin-left:auto;text-align:right"><div class="mono" style="font-size:20px;color:var(--gold);font-weight:600">$'+dBonus(s).toLocaleString()+'</div><div class="cap">bonus · '+s.dc+' demos × $20</div></div></div>'+
       '<div class="stat-mini" style="margin-top:14px">'+
         tile('Appts / Hour',pph,(pph>=TARGETS.pph?'▲ at/above '+TARGETS.pph+'/hr':'▼ below '+TARGETS.pph+'/hr target'),(pph>=TARGETS.pph?'delta up':'delta down'),hue(pph,TARGETS.pph))+
         tile('Show Rate',show+'%',(show>=TARGETS.show?'▲ above '+TARGETS.show+'%':'▼ below '+TARGETS.show+'% target'),(show>=TARGETS.show?'delta up':'delta down'),hue(show,TARGETS.show))+
         tile('Close Rate',close+'%',(close>=TARGETS.close?'▲ above '+TARGETS.close+'%':'▼ below '+TARGETS.close+'% target'),(close>=TARGETS.close?'delta up':'delta down'),hue(close,TARGETS.close))+
-        tile('Pace to Goal',proj,'goal '+s.tgt,(ppct>=100?'delta up':'delta down'))+'</div>'+
+        tile('Conversation %',(s.convPct||0)+'%','','delta flat')+'</div>'+
       '<div class="eyebrow" style="margin:18px 0 10px">Booking Ratio</div><div class="stat-mini">'+
         tile('Warm %',warm+'%','','delta flat')+
         tile('Cold %',cold+'%','','delta flat')+'</div>'+
@@ -738,7 +739,7 @@
         tile('Dials / Hour',(s.dials!=null&&s.hrs?Math.round(s.dials/s.hrs*10)/10:'—'),'','delta flat')+
         tile('Objection Success',osucc+'%','','delta flat')+
         tile('No-Shows',s.ns,'','delta flat')+'</div>'+
-      (hm?'<div class="eyebrow" style="margin:18px 0 10px">Call Activity · 14 days <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink-3)">· outbound dials/day</span></div><div style="display:flex;gap:3px;align-items:flex-end;height:56px">'+hm+'</div>':'')+
+      (hm?'<div class="eyebrow" style="margin:18px 0 10px">Call Activity · 14 days <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink-3)">· outbound dials/day</span></div><div style="display:flex;gap:3px;align-items:flex-end;height:70px">'+hm+'</div>':'')+
       '<div class="eyebrow" style="margin:18px 0 10px">Revenue per Hour Worked</div><div class="stat-mini">'+
         tile('Revenue / Hr','$'+Math.round(dRevHr(s)),'','delta flat')+
         tile('Net / Hr','$'+Math.round(dNetHr(s)),'',(dNetHr(s)>=HOURLY_WAGE?'delta up':'delta down'))+'</div>'+
@@ -852,6 +853,7 @@
     if(!LIVE_ENDPOINT) return; // no endpoint yet -> representative data stays
     fetch(LIVE_ENDPOINT+(LIVE_ENDPOINT.indexOf("?")>-1?"&":"?")+"days="+PERIOD_DAYS).then(function(r){return r.json()}).then(function(d){
       if(!d || !Array.isArray(d.setters) || !d.setters.length) return;
+      window.__heatDays = d.heatDays || [];
       var faces=[["#e9d5ff","#f2c9a0","#3a2a1e","#2563eb"],["#cffafe","#c9885f","#1a1512","#0f766e"],["#fce7f3","#8d5a3c","#111111","#6d28d9"],["#dcfce7","#e8b98f","#b45309","#be185d"],["#fef3c7","#6b4423","#0a0a0a","#b45309"]];
       settersBase = d.setters.map(function(s,i){
         s.face = s.face || faces[i%faces.length];
