@@ -330,7 +330,7 @@
           <div class="card kpi"><div class="eyebrow">Avg Appts / Hr</div><div class="val good" id="kPph">3.1</div><div class="cap" style="margin-top:8px">Target 3.0</div></div>
         </div>
         <div class="card pad0"><table>
-          <thead><tr><th>Setter</th><th>Status</th><th class="num">Booked</th><th class="num">Won</th><th style="width:120px">Close % · tgt 30</th><th class="num">No-Shows</th><th style="width:120px">Show % · tgt 65</th><th class="num">Cash</th></tr></thead>
+          <thead><tr><th>Setter</th><th>Status</th><th class="num">Booked</th><th class="num">Dials</th><th class="num">Won</th><th style="width:120px">Close % · tgt 30</th><th class="num">No-Shows</th><th style="width:120px">Show % · tgt 65</th><th class="num">Cash</th></tr></thead>
           <tbody id="dealTbl"></tbody>
         </table></div>
 
@@ -688,6 +688,7 @@
     for(var k in s.disp){dl+='<div class="hb"><span>'+k+'</span><div class="tr"><i style="width:'+Math.round(s.disp[k]/dmax*100)+'%;background:'+dc[di%5]+'"></i></div><span class="n">'+s.disp[k]+'</span></div>';di++}
     var ol='',omax=Math.max.apply(null,Object.keys(s.obj).map(function(k){return s.obj[k]}))||1;
     for(var o in s.obj){ol+='<div class="hb"><span style="font-size:11px">'+(objLabels[o]||o)+'</span><div class="tr"><i style="width:'+Math.round(s.obj[o]/omax*100)+'%;background:var(--c4)"></i></div><span class="n">'+s.obj[o]+'</span></div>'}
+    var il='';if(s.ind){var ie=Object.keys(s.ind).map(function(k){return [k,s.ind[k]];}).sort(function(a,b){return b[1]-a[1];}).slice(0,8);var imax=(ie[0]&&ie[0][1])||1;for(var z=0;z<ie.length;z++){il+='<div class="hb"><span style="font-size:11px;text-transform:capitalize">'+ie[z][0]+'</span><div class="tr"><i style="width:'+Math.round(ie[z][1]/imax*100)+'%;background:var(--c2)"></i></div><span class="n">'+ie[z][1]+'</span></div>';}}
     el.innerHTML='<div style="display:flex;align-items:center;gap:13px;margin-bottom:4px">'+avatar(s,48,null,null)+'<div><b style="font-size:16px">'+s.nm+'</b><div class="cap"><span class="pill '+statusMap[s.status]+'"><i></i>'+s.status+'</span> · '+s.uid+'</div></div>'+
       '<div style="margin-left:auto;text-align:right"><div class="mono" style="font-size:20px;color:var(--gold);font-weight:600">$'+dBonus(s).toLocaleString()+'</div><div class="cap">bonus · '+s.dc+' demos × $20</div></div></div>'+
       '<div class="stat-mini" style="margin-top:14px">'+
@@ -712,20 +713,21 @@
       '<div class="note" style="margin-top:10px;display:flex">Rev = '+s.won+' clients × $'+UNIT_PRICE+' · Net subtracts bonus ($'+dBonus(s)+') + wage ('+s.hrs+'h × $'+HOURLY_WAGE+')</div>'+
       '<div class="eyebrow" style="margin:18px 0 10px">Call Dispositions <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink-3)">· {{contact.call_outcome}}</span></div><div class="hbars">'+dl+'</div>'+
       '<div class="eyebrow" style="margin:18px 0 10px">Objection Frequency <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink-3)">· {{contact.objections}}</span></div><div class="hbars">'+ol+'</div>'+
-      '<div class="note" style="margin-top:16px;display:flex">Show=(scheduled−no-show)/scheduled · Close=client/scheduled · Appts/hr=scheduled/Hubstaff hrs · Bonus=demos×$20 — all grouped by '+s.uid+'</div>'+
+      (il?'<div class="eyebrow" style="margin:18px 0 10px">Prospects by Industry <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink-3)">· contact tags</span></div><div class="hbars">'+il+'</div>':'')+
+      '<div class="note" style="margin-top:16px;display:flex">Appts &amp; show from GHL calendar · Warm%=booked÷warm leads · Dials=outbound TYPE_CALL (live) · Bonus=demos×$20 — grouped by appt_setter_id</div>'+
       '<div style="margin-top:12px"><button class="btn ghost" style="width:100%;justify-content:center" onclick="drillSetter('+i+')">View '+s.appts+' booked appts in GHL ↗</button></div>';}
 
   function heat(pct,type){var c=type==='close'?(pct>=30?'var(--good)':pct>=27?'var(--warn)':'var(--bad)'):(pct>=65?'var(--good)':pct>=60?'var(--warn)':'var(--bad)');
     return '<div class="heat"><i style="width:'+Math.min(pct*(type==='close'?2.4:1.1),100)+'%;background:'+c+'"></i><span>'+pct+'%</span></div>'}
   function renderDealTbl(){var h='',t=document.getElementById('dealTbl'),tot={ap:0,won:0,ns:0,cash:0};
-    setters.forEach(function(s,i){tot.ap+=s.appts;tot.won+=s.won;tot.ns+=s.ns;tot.cash+=s.cash;
+    setters.forEach(function(s,i){tot.ap+=s.appts;tot.won+=s.won;tot.ns+=s.ns;tot.cash+=s.cash;tot.dials+=(s.dials||0);
       h+='<tr style="cursor:pointer" onclick="drillSetter('+i+')"><td><div style="display:flex;align-items:center;gap:10px">'+avatar(s,28,null,null)+'<span class="nm">'+s.nm+'</span></div></td>'+
         '<td><span class="pill '+statusMap[s.status]+'"><i></i>'+s.status+'</span></td>'+
-        '<td class="num">'+s.appts+'</td><td class="num">'+s.won+'</td>'+
+        '<td class="num">'+s.appts+'</td><td class="num">'+(s.dials!=null?s.dials.toLocaleString():'—')+'</td><td class="num">'+s.won+'</td>'+
         '<td>'+heat(dClose(s),'close')+'</td><td class="num">'+s.ns+'</td>'+
         '<td>'+heat(dShow(s),'show')+'</td><td class="num">$'+s.cash.toLocaleString()+'</td></tr>';});
     var tClose=Math.round(tot.won/tot.ap*100),tShow=Math.round((tot.ap-tot.ns)/tot.ap*100);
-    h+='<tr class="total"><td>Team total</td><td></td><td class="num">'+tot.ap+'</td><td class="num">'+tot.won+'</td><td class="num" style="padding-left:14px">'+tClose+'%</td><td class="num">'+tot.ns+'</td><td class="num" style="padding-left:14px">'+tShow+'%</td><td class="num">$'+tot.cash.toLocaleString()+'</td></tr>';
+    h+='<tr class="total"><td>Team total</td><td></td><td class="num">'+tot.ap+'</td><td class="num">'+tot.dials.toLocaleString()+'</td><td class="num">'+tot.won+'</td><td class="num" style="padding-left:14px">'+tClose+'%</td><td class="num">'+tot.ns+'</td><td class="num" style="padding-left:14px">'+tShow+'%</td><td class="num">$'+tot.cash.toLocaleString()+'</td></tr>';
     t.innerHTML=h;}
 
   function teamGauge(){var el=document.getElementById('teamGauge'),val=Math.round(561*PF),tgt=Math.round(500*PF),pct=Math.round(val/tgt*100),shown=Math.min(pct,100);
