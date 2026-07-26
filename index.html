@@ -333,7 +333,7 @@
         <div class="section-h"><h2>Setter Leaderboard</h2><span class="hint"></span></div>
         <div class="grid" style="grid-template-columns:1.5fr 1fr">
           <div class="card"><div class="eyebrow">Podium · appointments booked</div><div class="podium" id="podSet"></div></div>
-          <div class="card"><div class="eyebrow">Appointments by Setter</div><div class="tubes" id="tubes"></div><div class="cap" style="text-align:center;margin-top:10px"><span style="color:var(--warn)">▬</span> monthly target line</div></div>
+          <div class="card"><div class="eyebrow">Appointments by Setter</div><div class="tubes" id="tubes"></div><div class="cap" id="tubeCap" style="text-align:center;margin-top:10px"></div></div>
         </div>
 
         <div class="section-h"><h2>Team Metrics</h2><span class="hint"></span></div>
@@ -715,7 +715,7 @@
   function tubes(){var el=document.getElementById('tubes'),h='',tgt=MONTHLY_TARGET,scale=Math.max(maxAppts,tgt)||1;
     setters.forEach(function(s){var pct=Math.round(s.appts/scale*100),tl=Math.min(Math.round(tgt/scale*100),96);
       h+='<div class="tube-c"><div class="tube-v">'+s.appts+'</div><div class="tube"><i style="height:'+pct+'%"></i><div class="tline" style="bottom:'+tl+'%"></div></div>'+avatar(s,30,null,null)+'</div>';});
-    el.innerHTML=h;}
+    el.innerHTML=h;var tc=document.getElementById('tubeCap');if(tc){tc.innerHTML='<span style="color:var(--warn)">▬</span> Monthly target: <b style="color:var(--ink)">'+tgt+'</b> appointments';}}
 
   var selId=0;
   function renderBoard(){var el=document.getElementById('board'),h='';
