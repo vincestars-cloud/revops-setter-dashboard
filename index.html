@@ -323,10 +323,10 @@
 
         <div class="section-h"><h2>Team Metrics</h2><span class="hint">Visible to all setters</span></div>
         <div class="grid g4" style="margin-bottom:16px">
-          <div class="card kpi"><div class="eyebrow">Appointments Set</div><div class="val"><span class="pv" data-base="561" data-fmt="int">561</span></div></div>
-          <div class="card kpi"><div class="eyebrow">New Leads</div><div class="val"><span class="pv" data-base="1284" data-fmt="int">1,284</span></div></div>
-          <div class="card kpi"><div class="eyebrow">Avg Show Rate</div><div class="val good">67<small>%</small></div><div class="cap" style="margin-top:8px">Target 65%</div></div>
-          <div class="card kpi"><div class="eyebrow">Avg Appts / Hr</div><div class="val good">3.1</div><div class="cap" style="margin-top:8px">Target 3.0</div></div>
+          <div class="card kpi"><div class="eyebrow">Appointments Set</div><div class="val" id="kAppts">7</div></div>
+          <div class="card kpi"><div class="eyebrow">Total Dials</div><div class="val" id="kDials">130</div></div>
+          <div class="card kpi"><div class="eyebrow">Avg Show Rate</div><div class="val good" id="kShow">67<small>%</small></div><div class="cap" style="margin-top:8px">Target 65%</div></div>
+          <div class="card kpi"><div class="eyebrow">Avg Appts / Hr</div><div class="val good" id="kPph">3.1</div><div class="cap" style="margin-top:8px">Target 3.0</div></div>
         </div>
         <div class="card pad0"><table>
           <thead><tr><th>Setter</th><th>Status</th><th class="num">Booked</th><th class="num">Won</th><th style="width:120px">Close % · tgt 30</th><th class="num">No-Shows</th><th style="width:120px">Show % · tgt 65</th><th class="num">Cash</th></tr></thead>
@@ -607,27 +607,27 @@
 
   // ---- Derived setter metrics — one function per GHL formula ----
   function objTotal(s){var t=0;for(var k in s.obj)t+=s.obj[k];return t}    // calls with >=1 objection
-  function dShow(s){return Math.round((s.appts-s.ns)/s.appts*100)}          // (scheduled - no show)/scheduled
-  function dClose(s){return Math.round(s.won/s.appts*100)}                  // client tag / scheduled tag
-  function dPph(s){return Math.round(s.appts/s.hrs*100)/100}                // scheduled tag / Hubstaff hours
+  function dShow(s){return s.appts?Math.round((s.appts-s.ns)/s.appts*100):0}          // (scheduled - no show)/scheduled
+  function dClose(s){return s.appts?Math.round(s.won/s.appts*100):0}                  // client tag / scheduled tag
+  function dPph(s){return s.hrs?Math.round(s.appts/s.hrs*100)/100:0}                // scheduled tag / Hubstaff hours
   function dBonus(s){return s.dc*20}                                        // demo completed x $20
-  function dWarm(s){return Math.round(s.wb/s.appts*100)}                    // (scheduled & warm)/scheduled
-  function dCold(s){return Math.round(s.cb/s.appts*100)}                    // (scheduled & cold)/scheduled
-  function dObjSucc(s){return Math.round(s.aoc/objTotal(s)*100)}            // appts booked on objection calls / calls w/ objection
+  function dWarm(s){return s.appts?Math.round(s.wb/s.appts*100):0}                    // (scheduled & warm)/scheduled
+  function dCold(s){return s.appts?Math.round(s.cb/s.appts*100):0}                    // (scheduled & cold)/scheduled
+  function dObjSucc(s){var t=objTotal(s);return t?Math.round(s.aoc/t*100):0}            // appts booked on objection calls / calls w/ objection
   function svgFace(f){var s='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" fill="'+f[0]+'"/><circle cx="40" cy="80" r="30" fill="'+f[3]+'"/><rect x="30" y="42" width="20" height="14" rx="7" fill="'+f[1]+'"/><circle cx="40" cy="34" r="19" fill="'+f[1]+'"/><path d="M21 33c0-12 8-19 19-19s19 7 19 19c0-5-4-12-19-12S21 28 21 33z" fill="'+f[2]+'"/></svg>';return "data:image/svg+xml,"+encodeURIComponent(s)}
   settersBase.forEach(function(s){s.photo=svgFace(s.face)});
   closersBase.forEach(function(s){s.photo=svgFace(s.face)});
   var usePhotos=true;
   var UNIT_PRICE=297,HOURLY_WAGE=8; // config: avg deal price + setter hourly wage — drive from targets table live
   // Revenue/Hr per Vince's model: Gross = (won clients × price) / Hubstaff hours; Net also nets out bonus + wage
-  function dRevHr(s){return (s.won*UNIT_PRICE)/s.hrs}
-  function dNetHr(s){return (s.won*UNIT_PRICE - dBonus(s) - s.hrs*HOURLY_WAGE)/s.hrs}
+  function dRevHr(s){return s.hrs?(s.won*UNIT_PRICE)/s.hrs:0}
+  function dNetHr(s){return s.hrs?(s.won*UNIT_PRICE - dBonus(s) - s.hrs*HOURLY_WAGE)/s.hrs:0}
 
   // ---- Period + pace ----
   var PERIODS={Today:0.045,Week:0.23,Month:1,Quarter:3.05},PF=1,PLABEL='Month';
   var setters=settersBase,closers=closersBase,maxAppts=142,teamCash=284900;
   function scaleObj(o,keys,f){var n=Object.assign({},o);keys.forEach(function(k){n[k]=Math.round(o[k]*f)});return n}
-  function applyPeriod(label){
+  function applyPeriod(label){if(window.__LIVE){PLABEL=label;PF=1;setters=settersBase;maxAppts=Math.max.apply(null,setters.map(function(s){return s.appts}))||1;renderAll();return;}
     PLABEL=label;PF=PERIODS[label]||1;
     setters=settersBase.map(function(s){var n=scaleObj(s,['appts','ns','won','dials','dc','wb','cb','aoc','cash','tgt'],PF);
       n.hrs=Math.round(s.hrs*PF*10)/10;n.disp={};for(var k in s.disp)n.disp[k]=Math.round(s.disp[k]*PF);
@@ -808,7 +808,7 @@
   // ---- LIVE DATA (GitHub Pages is static: no secrets here). ----
   // Set LIVE_ENDPOINT to the n8n webhook that returns { updatedAt, setters:[{nm,uid,appts,ns,won,hrs,act,dials,dc,wb,cb,aoc,tgt,cash,status,obj:{},disp:{}}] }.
   // n8n holds the GHL + Hubstaff secrets server-side and computes the formulas; this page only reads the result.
-  var LIVE_ENDPOINT = ""; // <-- filled once the n8n Setter-Metrics webhook is live
+  var LIVE_ENDPOINT = "https://n8n.americanlifeteam.com/webhook/sbp-setter-metrics"; // <-- filled once the n8n Setter-Metrics webhook is live
   function initials(n){return (n||"?").split(" ").map(function(w){return w[0]||""}).join("").slice(0,2).toUpperCase()}
   function loadLive(){
     if(!LIVE_ENDPOINT) return; // no endpoint yet -> representative data stays
@@ -824,9 +824,14 @@
         ["appts","ns","won","hrs","act","dials","dc","wb","cb","aoc","cash"].forEach(function(k){ s[k] = s[k] || 0 });
         return s;
       });
-      setters = settersBase; selId = 0;
+      setters = settersBase; selId = 0; window.__LIVE = true;
       maxAppts = Math.max.apply(null, setters.map(function(s){return s.appts||0})) || 1;
-      applyPeriod("Month"); renderAll();
+      var TT={appts:0,dials:0,ns:0,hrs:0}; setters.forEach(function(s){TT.appts+=s.appts;TT.dials+=s.dials;TT.ns+=s.ns;TT.hrs+=s.hrs;});
+      renderAll();
+      var setEl=function(id,v){var e=document.getElementById(id);if(e)e.innerHTML=v;};
+      setEl("kAppts",TT.appts); setEl("kDials",TT.dials.toLocaleString());
+      setEl("kShow",(TT.appts?Math.round((TT.appts-TT.ns)/TT.appts*100):0)+"<small>%</small>");
+      setEl("kPph",(TT.hrs?Math.round(TT.appts/TT.hrs*100)/100:0)+"");
       var lv=document.querySelector(".live"); if(lv) lv.innerHTML = "<span class=\"dot\"></span>LIVE · " + (d.updatedAt || "updated");
     }).catch(function(){ /* keep representative data on any failure */ });
   }
