@@ -719,7 +719,7 @@
 
   function heat(pct,type){var c=type==='close'?(pct>=30?'var(--good)':pct>=27?'var(--warn)':'var(--bad)'):(pct>=65?'var(--good)':pct>=60?'var(--warn)':'var(--bad)');
     return '<div class="heat"><i style="width:'+Math.min(pct*(type==='close'?2.4:1.1),100)+'%;background:'+c+'"></i><span>'+pct+'%</span></div>'}
-  function renderDealTbl(){var h='',t=document.getElementById('dealTbl'),tot={ap:0,won:0,ns:0,cash:0};
+  function renderDealTbl(){var h='',t=document.getElementById('dealTbl'),tot={ap:0,won:0,ns:0,cash:0,dials:0};
     setters.forEach(function(s,i){tot.ap+=s.appts;tot.won+=s.won;tot.ns+=s.ns;tot.cash+=s.cash;tot.dials+=(s.dials||0);
       h+='<tr style="cursor:pointer" onclick="drillSetter('+i+')"><td><div style="display:flex;align-items:center;gap:10px">'+avatar(s,28,null,null)+'<span class="nm">'+s.nm+'</span></div></td>'+
         '<td><span class="pill '+statusMap[s.status]+'"><i></i>'+s.status+'</span></td>'+
