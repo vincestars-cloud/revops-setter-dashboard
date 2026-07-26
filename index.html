@@ -344,6 +344,8 @@
           <div class="board" id="board"></div>
           <div><div class="card" id="indiv"></div></div>
         </div>
+        <div class="section-h"><h2>Prospects by Industry</h2><span class="hint">Team total · from contact tags</span></div>
+        <div class="card"><div class="hbars" id="teamInd"></div></div>
       </section>
 
       <!-- ===== SALES ===== -->
@@ -695,7 +697,6 @@
     for(var k in s.disp){dl+='<div class="hb"><span>'+k+'</span><div class="tr"><i style="width:'+Math.round(s.disp[k]/dmax*100)+'%;background:'+dc[di%5]+'"></i></div><span class="n">'+s.disp[k]+'</span></div>';di++}
     var ol='',omax=Math.max.apply(null,Object.keys(s.obj).map(function(k){return s.obj[k]}))||1;
     for(var o in s.obj){ol+='<div class="hb"><span style="font-size:11px">'+(objLabels[o]||o)+'</span><div class="tr"><i style="width:'+Math.round(s.obj[o]/omax*100)+'%;background:var(--c4)"></i></div><span class="n">'+s.obj[o]+'</span></div>'}
-    var il='';if(s.ind){var ie=Object.keys(s.ind).map(function(k){return [k,s.ind[k]];}).sort(function(a,b){return b[1]-a[1];}).slice(0,8);var imax=(ie[0]&&ie[0][1])||1;for(var z=0;z<ie.length;z++){il+='<div class="hb"><span style="font-size:11px;text-transform:capitalize">'+ie[z][0]+'</span><div class="tr"><i style="width:'+Math.round(ie[z][1]/imax*100)+'%;background:var(--c2)"></i></div><span class="n">'+ie[z][1]+'</span></div>';}}
     el.innerHTML='<div style="display:flex;align-items:center;gap:13px;margin-bottom:4px">'+avatar(s,48,null,null)+'<div><b style="font-size:16px">'+s.nm+'</b><div class="cap"><span class="pill '+statusMap[s.status]+'"><i></i>'+s.status+'</span> · '+s.uid+'</div></div>'+
       '<div style="margin-left:auto;text-align:right"><div class="mono" style="font-size:20px;color:var(--gold);font-weight:600">$'+dBonus(s).toLocaleString()+'</div><div class="cap">bonus · '+s.dc+' demos × $20</div></div></div>'+
       '<div class="stat-mini" style="margin-top:14px">'+
@@ -720,7 +721,6 @@
       '<div class="note" style="margin-top:10px;display:flex">Rev = '+s.won+' clients × $'+UNIT_PRICE+' · Net subtracts bonus ($'+dBonus(s)+') + wage ('+s.hrs+'h × $'+HOURLY_WAGE+')</div>'+
       '<div class="eyebrow" style="margin:18px 0 10px">Call Dispositions <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink-3)">· {{contact.call_outcome}}</span></div><div class="hbars">'+dl+'</div>'+
       '<div class="eyebrow" style="margin:18px 0 10px">Objection Frequency <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink-3)">· {{contact.objections}}</span></div><div class="hbars">'+ol+'</div>'+
-      (il?'<div class="eyebrow" style="margin:18px 0 10px">Prospects by Industry <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink-3)">· contact tags</span></div><div class="hbars">'+il+'</div>':'')+
       '<div class="note" style="margin-top:16px;display:flex">Appts &amp; show from GHL calendar · Warm%=booked÷warm leads · Dials=outbound TYPE_CALL (live) · Bonus=demos×$20 — grouped by appt_setter_id</div>'+
       '<div style="margin-top:12px"><button class="btn ghost" style="width:100%;justify-content:center" onclick="drillSetter('+i+')">View '+s.appts+' booked appts in GHL ↗</button></div>';}
 
@@ -762,8 +762,9 @@
   function cart(){var el=document.getElementById('cart'),h='';STATES.forEach(function(s){var t=s[3]/26,a=0.10+t*0.9;h+='<div class="st" style="grid-column:'+s[1]+';grid-row:'+s[2]+';background:rgba(77,155,255,'+a.toFixed(2)+');border-color:'+(t>.5?'rgba(77,155,255,.5)':'var(--line-soft)')+'"><span>'+s[0]+'</span><span class="d">'+s[3]+'</span></div>';});el.innerHTML=h;}
   function review(elId,s,stars,when){document.getElementById(elId).innerHTML=avatar(s,30,null,null)+'<div><b style="font-size:12.5px">'+s.nm+'</b><div class="stars">'+stars+'</div></div><time style="margin-left:auto">'+when+'</time>';}
 
+  function renderIndustry(){var el=document.getElementById("teamInd");if(!el)return;var ag={};setters.forEach(function(s){if(s.ind){for(var k in s.ind){ag[k]=(ag[k]||0)+s.ind[k];}}});var ie=Object.keys(ag).map(function(k){return [k,ag[k]];}).sort(function(a,b){return b[1]-a[1];});var mx=(ie[0]&&ie[0][1])||1;var h="";for(var z=0;z<ie.length;z++){h+='<div class="hb"><span style="text-transform:capitalize">'+ie[z][0]+'</span><div class="tr"><i style="width:'+Math.round(ie[z][1]/mx*100)+'%;background:var(--c2)"></i></div><span class="n">'+ie[z][1]+'</span></div>';}el.innerHTML=h||'<div class="cap">No industry tags yet</div>';}
   function renderAll(){
-    renderBoard();renderIndiv(selId);renderDealTbl();tubes();
+    renderBoard();renderIndiv(selId);renderDealTbl();tubes();renderIndustry();
     podium('podTeam',closers,function(s){return money(s.cash)},function(){return 'Closer'});
     podium('podSet',setters,function(s){return s.appts+' appts'},function(s){return dPph(s)+'/hr'});
     podium('podClose',closers,function(s){return money(s.cash)},function(){return 'Closer'});
