@@ -829,11 +829,11 @@
       });
       setters = settersBase; selId = 0; window.__LIVE = true;
       maxAppts = Math.max.apply(null, setters.map(function(s){return s.appts||0})) || 1;
-      var TT={appts:0,dials:0,ns:0,hrs:0}; setters.forEach(function(s){TT.appts+=s.appts;TT.dials+=s.dials;TT.ns+=s.ns;TT.hrs+=s.hrs;});
+      var TT={appts:0,shows:0,ns:0,hrs:0,dials:0,hasDials:false}; setters.forEach(function(s){TT.appts+=s.appts;TT.shows+=(s.shows||0);TT.ns+=s.ns;TT.hrs+=s.hrs;if(s.dials!=null){TT.dials+=s.dials;TT.hasDials=true;}});
       renderAll();
       var setEl=function(id,v){var e=document.getElementById(id);if(e)e.innerHTML=v;};
-      setEl("kAppts",TT.appts); setEl("kDials",TT.dials.toLocaleString());
-      setEl("kShow",(TT.appts?Math.round((TT.appts-TT.ns)/TT.appts*100):0)+"<small>%</small>");
+      setEl("kAppts",TT.appts); setEl("kDials",TT.hasDials?TT.dials.toLocaleString():"—");
+      setEl("kShow",(TT.appts?Math.round(TT.shows/TT.appts*100):0)+"<small>%</small>");
       setEl("kPph",(TT.hrs?Math.round(TT.appts/TT.hrs*100)/100:0)+"");
       var lv=document.querySelector(".live"); if(lv) lv.innerHTML = "<span class=\"dot\"></span>LIVE · " + (d.updatedAt || "updated");
     }).catch(function(){ /* keep representative data on any failure */ });
