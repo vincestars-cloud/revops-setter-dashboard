@@ -104,7 +104,7 @@
   .kpi .top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
   .kpi .val{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:30px;font-weight:600;letter-spacing:-.02em;margin:10px 0 2px;line-height:1}
   .kpi .val small{font-size:15px;color:var(--ink-3);font-weight:500}
-  .kpi .val.good{color:var(--good)} .kpi .val.warn{color:var(--warn)}
+  .kpi .val.good{color:var(--good)} .kpi .val.warn{color:var(--warn)} .kpi .val.bad{color:var(--bad)}
   .delta{font-size:11.5px;font-weight:600;display:inline-flex;align-items:center;gap:3px}
   .delta.up{color:var(--good)} .delta.down{color:var(--bad)} .delta.flat{color:var(--ink-3)}
   .spark{width:100%;height:34px;margin-top:12px;display:block}
@@ -273,7 +273,7 @@
       <button class="burger" onclick="document.getElementById('sidebar').classList.toggle('open')"><svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
       <div><h1 id="vTitle">Appointment Setter Dashboard</h1><div class="sub" id="vSub">You + the setter team · gamified</div></div>
       <div class="spacer"></div>
-      <div class="timeseg" id="timeseg"><button>Today</button><button>Week</button><button class="on">Month</button><button>Quarter</button></div>
+      <div class="timeseg" id="timeseg"><button>Today</button><button class="on">Week</button><button>Month</button><button>Quarter</button></div>
       <div class="live"><span class="dot"></span>LIVE</div>
       <button class="iconbtn" id="alertsBtn" onclick="openAlerts()" title="Alerts" style="position:relative"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 8a6 6 0 0112 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10 21a2 2 0 004 0"/></svg><span class="abadge" id="alertDot">3</span></button>
       <button class="iconbtn" id="themeBtn" onclick="toggleTheme()" title="Toggle light / dark"></button>
@@ -659,7 +659,8 @@
     if(PLABEL==='Quarter'){var qm=Math.floor(d.getMonth()/3)*3,st=new Date(d.getFullYear(),qm,1),en=new Date(d.getFullYear(),qm+3,0);return Math.min(((d-st)/864e5+1)/((en-st)/864e5+1),1)}
     var dim=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();return Math.min(d.getDate()/dim,1);}
   function projected(v){return Math.round(v/Math.max(elapsedFrac(),0.05))}
-  document.querySelectorAll('#timeseg button').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('#timeseg button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');applyPeriod(b.textContent);})});
+  var DAYSMAP={Today:1,Week:7,Month:30,Quarter:90};
+  document.querySelectorAll('#timeseg button').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('#timeseg button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');if(LIVE_ENDPOINT){PERIOD_DAYS=DAYSMAP[b.textContent]||7;loadLive();}else{applyPeriod(b.textContent);}})});
 
   // ---- Renderers ----
   function avatar(s,size,ring,medalIdx){
@@ -701,33 +702,32 @@
     for(var k in s.disp){dl+='<div class="hb"><span>'+k+'</span><div class="tr"><i style="width:'+Math.round(s.disp[k]/dmax*100)+'%;background:'+dc[di%5]+'"></i></div><span class="n">'+s.disp[k]+'</span></div>';di++}
     var ol='',omax=Math.max.apply(null,Object.keys(s.obj).map(function(k){return s.obj[k]}))||1;
     for(var o in s.obj){ol+='<div class="hb"><span style="font-size:11px">'+(objLabels[o]||o)+'</span><div class="tr"><i style="width:'+Math.round(s.obj[o]/omax*100)+'%;background:var(--c4)"></i></div><span class="n">'+s.obj[o]+'</span></div>'}
-    var hm='';if(s.heat&&s.heat.length){var hmax=Math.max.apply(null,s.heat)||1;for(var q=0;q<s.heat.length;q++){var hv=s.heat[q];var op=hv?(0.18+0.82*hv/hmax):0.05;hm+='<div title="'+hv+' dials" style="flex:1;min-width:0;height:'+(8+Math.round((hv/hmax)*30))+'px;border-radius:3px;background:rgba(77,155,255,'+op.toFixed(2)+')"></div>';}}
+    var hm='';if(s.heat&&s.heat.length){var hmax=Math.max.apply(null,s.heat)||1;for(var q=0;q<s.heat.length;q++){var hv=s.heat[q];var op=hv?(0.18+0.82*hv/hmax):0.05;hm+='<div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px"><span style="font-size:9px;color:var(--ink-3);font-family:var(--mono)">'+(hv||'')+'</span><div title="'+hv+' dials" style="width:100%;height:'+(6+Math.round((hv/hmax)*26))+'px;border-radius:3px;background:rgba(77,155,255,'+op.toFixed(2)+')"></div></div>';}}
     el.innerHTML='<div style="display:flex;align-items:center;gap:13px;margin-bottom:4px">'+avatar(s,48,null,null)+'<div><b style="font-size:16px">'+s.nm+'</b><div class="cap"><span class="pill '+statusMap[s.status]+'"><i></i>'+s.status+'</span> · '+s.uid+'</div></div>'+
       '<div style="margin-left:auto;text-align:right"><div class="mono" style="font-size:20px;color:var(--gold);font-weight:600">$'+dBonus(s).toLocaleString()+'</div><div class="cap">bonus · '+s.dc+' demos × $20</div></div></div>'+
       '<div class="stat-mini" style="margin-top:14px">'+
         tile('Appts / Hour',pph,(pph>=TARGETS.pph?'▲ at/above '+TARGETS.pph+'/hr':'▼ below '+TARGETS.pph+'/hr target'),(pph>=TARGETS.pph?'delta up':'delta down'),hue(pph,TARGETS.pph))+
         tile('Show Rate',show+'%',(show>=TARGETS.show?'▲ above '+TARGETS.show+'%':'▼ below '+TARGETS.show+'% target'),(show>=TARGETS.show?'delta up':'delta down'),hue(show,TARGETS.show))+
         tile('Close Rate',close+'%',(close>=TARGETS.close?'▲ above '+TARGETS.close+'%':'▼ below '+TARGETS.close+'% target'),(close>=TARGETS.close?'delta up':'delta down'),hue(close,TARGETS.close))+
-        tile('Pace to Goal',proj,'proj. month-end vs '+s.tgt+' goal · '+ppct+'%',(ppct>=100?'delta up':'delta down'))+'</div>'+
+        tile('Pace to Goal',proj,'goal '+s.tgt,(ppct>=100?'delta up':'delta down'))+'</div>'+
       '<div class="eyebrow" style="margin:18px 0 10px">Booking Ratio</div><div class="stat-mini">'+
-        tile('Warm %',warm+'%','booked ÷ warm leads','delta flat')+
-        tile('Cold %',cold+'%','booked ÷ cold leads','delta flat')+'</div>'+
+        tile('Warm %',warm+'%','','delta flat')+
+        tile('Cold %',cold+'%','','delta flat')+'</div>'+
       '<div class="eyebrow" style="margin:18px 0 10px">Activity · from Hubstaff</div><div class="stat-mini">'+
         tile('Total Hours Worked',s.hrs+'h','this period','delta flat')+
         tile('Activity %',s.act+'%',(s.act>=70?'▲ healthy':'▼ low'),(s.act>=70?'delta up':'delta down'))+'</div>'+
       '<div class="eyebrow" style="margin:18px 0 10px">Dialer</div><div class="stat-mini">'+
-        tile('Outbound Dials',(s.dials==null?'—':s.dials.toLocaleString()),(s.dials==null?'call-log sync pending':'TYPE_CALL · outbound'),'delta flat')+
-        tile('Dials / Hour',(s.dials!=null&&s.hrs?Math.round(s.dials/s.hrs*10)/10:'—'),'dials ÷ hours worked','delta flat')+
-        tile('Objection Success',osucc+'%','booked ÷ objection calls','delta flat')+
-        tile('No-Shows',s.ns,'from calendar','delta flat')+'</div>'+
-      (hm?'<div class="eyebrow" style="margin:18px 0 10px">Call Activity · 14 days <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink-3)">· outbound dials/day</span></div><div style="display:flex;gap:3px;align-items:flex-end;height:40px">'+hm+'</div>':'')+
+        tile('Outbound Dials',(s.dials==null?'—':s.dials.toLocaleString()),'','delta flat')+
+        tile('Dials / Hour',(s.dials!=null&&s.hrs?Math.round(s.dials/s.hrs*10)/10:'—'),'','delta flat')+
+        tile('Objection Success',osucc+'%','','delta flat')+
+        tile('No-Shows',s.ns,'','delta flat')+'</div>'+
+      (hm?'<div class="eyebrow" style="margin:18px 0 10px">Call Activity · 14 days <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink-3)">· outbound dials/day</span></div><div style="display:flex;gap:3px;align-items:flex-end;height:56px">'+hm+'</div>':'')+
       '<div class="eyebrow" style="margin:18px 0 10px">Revenue per Hour Worked</div><div class="stat-mini">'+
-        tile('Gross Rev / Hr','$'+Math.round(dRevHr(s)),'$'+(s.won*UNIT_PRICE).toLocaleString()+' ÷ '+s.hrs+'h','delta flat')+
-        tile('Net / Hr','$'+Math.round(dNetHr(s)),'after bonus + $'+HOURLY_WAGE+'/hr wage',(dNetHr(s)>=HOURLY_WAGE?'delta up':'delta down'))+'</div>'+
-      '<div class="note" style="margin-top:10px;display:flex">Rev = '+s.won+' clients × $'+UNIT_PRICE+' · Net subtracts bonus ($'+dBonus(s)+') + wage ('+s.hrs+'h × $'+HOURLY_WAGE+')</div>'+
-      '<div class="eyebrow" style="margin:18px 0 10px">Call Dispositions <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink-3)">· {{contact.call_outcome}}</span></div><div class="hbars">'+dl+'</div>'+
-      '<div class="eyebrow" style="margin:18px 0 10px">Objection Frequency <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink-3)">· {{contact.objections}}</span></div><div class="hbars">'+ol+'</div>'+
-      '<div class="note" style="margin-top:16px;display:flex">Appts &amp; show from GHL calendar · Warm%=booked÷warm leads · Dials=outbound TYPE_CALL (live) · Bonus=demos×$20 — grouped by appt_setter_id</div>'+
+        tile('Revenue / Hr','$'+Math.round(dRevHr(s)),'','delta flat')+
+        tile('Net / Hr','$'+Math.round(dNetHr(s)),'',(dNetHr(s)>=HOURLY_WAGE?'delta up':'delta down'))+'</div>'+
+      '<div class="eyebrow" style="margin:18px 0 10px">Call Dispositions</div><div class="hbars">'+dl+'</div>'+
+      '<div class="eyebrow" style="margin:18px 0 10px">Objection Frequency</div><div class="hbars">'+ol+'</div>'+
+
       '<div style="margin-top:12px"><button class="btn ghost" style="width:100%;justify-content:center" onclick="drillSetter('+i+')">View '+s.appts+' booked appts in GHL ↗</button></div>';}
 
   function heat(pct,type){var c=type==='close'?(pct>=30?'var(--good)':pct>=27?'var(--warn)':'var(--bad)'):(pct>=65?'var(--good)':pct>=60?'var(--warn)':'var(--bad)');
@@ -789,8 +789,8 @@
   function closeDrill(){document.getElementById('drillScrim').classList.remove('on')}
   document.getElementById('drillScrim').addEventListener('click',function(e){if(e.target===this)closeDrill()});
   var DNAMES=['Rosa Gutierrez','Marcus Tan','Aisha Lang','Kevin Park','Dana Cole','Omar Reyes','Nina Foster','Blake Rivera','Chloe Kim','Priya Shah'];
-  function drillSetter(i){var s=setters[i],rows=[];for(var n=0;n<Math.min(s.appts,10);n++){rows.push(['<span class="nm">'+DNAMES[n%DNAMES.length]+'</span>','appointment scheduled',s.nm,'Jul '+((n*2)%26+1)]);}
-    drillOpen(s.nm+' — booked appointments','Contacts tagged ‘appointment scheduled’ · grouped by '+s.uid,[['Contact'],['GHL Tag'],['Setter'],['Booked']],rows);}
+  function drillSetter(i){var s=setters[i];var rows=(s.list||[]).map(function(x){return ['<span class="nm">'+x.n+'</span>',x.s,s.nm,x.d];});if(!rows.length){rows=[['No appointments in this period','','','']];}
+    drillOpen(s.nm+' — booked appointments','Appointments booked in the selected period',[['Contact'],['Status'],['Setter'],['Date']],rows);}
   function drillAppts(){var rows=[];setters.forEach(function(s){for(var n=0;n<2;n++)rows.push(['<span class="nm">'+DNAMES[(s.appts+n)%DNAMES.length]+'</span>','appointment scheduled',s.nm,'Jul '+((n*3)%26+1)]);});
     drillOpen('Appointments Set','All contacts tagged ‘appointment scheduled’ this period',[['Contact'],['GHL Tag'],['Setter'],['Booked']],rows);}
   function drillClients(){var rows=[['<span class="nm">Glow Aesthetics</span>','client','Jordan Mercer','$4,800'],['<span class="nm">Peak Plumbing</span>','client','Priya Nair','$3,200'],['<span class="nm">BrightSmile Dental</span>','client','Jordan Mercer','$5,100'],['<span class="nm">Summit Chiro</span>','client','Marcus Webb','$2,900']];
@@ -827,11 +827,12 @@
   // ---- LIVE DATA (GitHub Pages is static: no secrets here). ----
   // Set LIVE_ENDPOINT to the n8n webhook that returns { updatedAt, setters:[{nm,uid,appts,ns,won,hrs,act,dials,dc,wb,cb,aoc,tgt,cash,status,obj:{},disp:{}}] }.
   // n8n holds the GHL + Hubstaff secrets server-side and computes the formulas; this page only reads the result.
-  var LIVE_ENDPOINT = "https://n8n.americanlifeteam.com/webhook/sbp-setter-metrics"; // <-- filled once the n8n Setter-Metrics webhook is live
+  var LIVE_ENDPOINT = "https://n8n.americanlifeteam.com/webhook/sbp-setter-metrics";
+  var PERIOD_DAYS = 7; // <-- filled once the n8n Setter-Metrics webhook is live
   function initials(n){return (n||"?").split(" ").map(function(w){return w[0]||""}).join("").slice(0,2).toUpperCase()}
   function loadLive(){
     if(!LIVE_ENDPOINT) return; // no endpoint yet -> representative data stays
-    fetch(LIVE_ENDPOINT).then(function(r){return r.json()}).then(function(d){
+    fetch(LIVE_ENDPOINT+(LIVE_ENDPOINT.indexOf("?")>-1?"&":"?")+"days="+PERIOD_DAYS).then(function(r){return r.json()}).then(function(d){
       if(!d || !Array.isArray(d.setters) || !d.setters.length) return;
       var faces=[["#e9d5ff","#f2c9a0","#3a2a1e","#2563eb"],["#cffafe","#c9885f","#1a1512","#0f766e"],["#fce7f3","#8d5a3c","#111111","#6d28d9"],["#dcfce7","#e8b98f","#b45309","#be185d"],["#fef3c7","#6b4423","#0a0a0a","#b45309"]];
       settersBase = d.setters.map(function(s,i){
@@ -844,13 +845,15 @@
         return s;
       });
       setters = settersBase; selId = 0; window.__LIVE = true;
+      (function(){var sel=document.getElementById("tSetter");if(sel){sel.innerHTML="";settersBase.forEach(function(ss,ii){var o=document.createElement("option");o.value=ii;o.textContent=ss.nm;sel.appendChild(o);});}})();
       maxAppts = Math.max.apply(null, setters.map(function(s){return s.appts||0})) || 1;
       var TT={appts:0,shows:0,ns:0,hrs:0,dials:0,hasDials:false}; setters.forEach(function(s){TT.appts+=s.appts;TT.shows+=(s.shows||0);TT.ns+=s.ns;TT.hrs+=s.hrs;if(s.dials!=null){TT.dials+=s.dials;TT.hasDials=true;}});
       renderAll();
       var setEl=function(id,v){var e=document.getElementById(id);if(e)e.innerHTML=v;};
       setEl("kAppts",TT.appts); setEl("kDials",TT.hasDials?TT.dials.toLocaleString():"—");
-      setEl("kShow",(TT.appts?Math.round(TT.shows/TT.appts*100):0)+"<small>%</small>");
-      setEl("kPph",(TT.hrs?Math.round(TT.appts/TT.hrs*100)/100:0)+"");
+      var tShow=(TT.appts?Math.round(TT.shows/TT.appts*100):0),tPph=(TT.hrs?Math.round(TT.appts/TT.hrs*100)/100:0);
+      setEl("kShow",tShow+"<small>%</small>");var ke=document.getElementById("kShow");if(ke)ke.className="val "+hue(tShow,TARGETS.show);
+      setEl("kPph",tPph+"");var kpe=document.getElementById("kPph");if(kpe)kpe.className="val "+hue(tPph,TARGETS.pph);
       var lv=document.querySelector(".live"); if(lv) lv.innerHTML = "<span class=\"dot\"></span>LIVE";
       var lo=document.getElementById("loadov"); if(lo) lo.classList.add("hide");
     }).catch(function(){ renderAll(); var lo=document.getElementById("loadov"); if(lo) lo.classList.add("hide"); });
