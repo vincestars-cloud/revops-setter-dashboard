@@ -230,6 +230,11 @@
   .x{margin-left:auto;cursor:pointer;color:var(--ink-3);background:none;border:none;font-size:20px}
   .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(30px);background:var(--good);color:#fff;font-weight:600;font-size:13px;padding:11px 18px;border-radius:10px;z-index:80;opacity:0;transition:.3s;pointer-events:none}
   .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  .loadov{position:fixed;inset:0 0 0 var(--sb);background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;z-index:50;transition:opacity .45s}
+  .loadov.hide{opacity:0;pointer-events:none}
+  .spin{width:32px;height:32px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @media(max-width:820px){.loadov{inset:0}}
   .note{font-size:11px;color:var(--ink-3);border:1px dashed var(--line);border-radius:9px;padding:9px 12px;display:inline-flex;gap:8px;align-items:center}
   .drillable{cursor:pointer;transition:border-color .15s}
   .drillable:hover{border-color:var(--accent)}
@@ -537,6 +542,8 @@
   </div>
 </div>
 
+<div class="loadov" id="loadov"><div class="spin"></div><div style="color:var(--ink-3);font-size:13px;letter-spacing:.02em">Loading live data…</div></div>
+
 <!-- Targets modal -->
 <div class="scrim" id="scrim"><div class="modal">
   <div style="display:flex;align-items:flex-start"><div><h3>Set Monthly Targets</h3><div class="cap">July 2026 · owner only</div></div><button class="x" onclick="closeTargets()">×</button></div>
@@ -837,13 +844,15 @@
       setEl("kAppts",TT.appts); setEl("kDials",TT.hasDials?TT.dials.toLocaleString():"—");
       setEl("kShow",(TT.appts?Math.round(TT.shows/TT.appts*100):0)+"<small>%</small>");
       setEl("kPph",(TT.hrs?Math.round(TT.appts/TT.hrs*100)/100:0)+"");
-      var lv=document.querySelector(".live"); if(lv) lv.innerHTML = "<span class=\"dot\"></span>LIVE · " + (d.updatedAt || "updated");
-    }).catch(function(){ /* keep representative data on any failure */ });
+      var lv=document.querySelector(".live"); if(lv) lv.innerHTML = "<span class=\"dot\"></span>LIVE";
+      var lo=document.getElementById("loadov"); if(lo) lo.classList.add("hide");
+    }).catch(function(){ renderAll(); var lo=document.getElementById("loadov"); if(lo) lo.classList.add("hide"); });
   }
 
 
   // ---- Init ----
-  setTheme('dark');cart();renderAll();gauge(32);donut();loadLive();
+  setTheme('dark');cart();gauge(32);donut();
+  if(LIVE_ENDPOINT){loadLive();setTimeout(function(){if(!window.__LIVE){renderAll();}var o=document.getElementById('loadov');if(o)o.classList.add('hide');},8000);}else{renderAll();var o=document.getElementById('loadov');if(o)o.classList.add('hide');}
 </script>
 
 </body>
