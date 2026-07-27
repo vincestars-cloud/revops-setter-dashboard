@@ -514,7 +514,7 @@
           <div class="card"><h3>Message Path</h3><div class="cap">Contacts moving through the sequence</div>
             <div class="funnel" id="oFunnel" style="margin-top:16px"></div>
           </div>
-          <div class="card"><h3>Offer Reply Results</h3><div class="cap">Sentiment of replies to the offer message</div>
+          <div class="card"><h3>Reply Outcomes</h3><div class="cap">Interested contacts pushed to GHL vs not-interested</div>
             <div class="hbars" id="oPath" style="margin-top:16px"></div>
           </div>
         </div>
@@ -841,9 +841,9 @@
   function oDur(ms){ms=Number(ms||0);if(ms<1000)return '0s';var s=Math.round(ms/1000);if(s<60)return s+'s';var m=Math.floor(s/60),r=s%60;return m+'m '+(r<10?'0':'')+r+'s';}
   function oArea(g){if(!g||typeof g!=='object')return '—';var a=[g.city,g.region||g.country].filter(Boolean);return a.length?a.slice(0,2).join(', '):(g.country||'—');}
   function oDate(iso){if(!iso)return '—';var d=new Date(iso),n=new Date();if(d.toDateString()===n.toDateString())return 'Today '+d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});return d.toLocaleDateString([],{month:'short',day:'numeric'});}
-  function loadOwner(){var URL=OWNER_ENDPOINT;if(!URL)return;
-    fetch(URL+'?days='+OWNER_DAYS).then(function(r){return r.json();}).then(function(d){
-      if(!d)return;var m=d.money||{},c=d.cogs||{},s=d.sms||{},v=d.visitors||{};
+  function loadOwner(){var URL=OWNER_ENDPOINT;if(!URL||!sb)return;
+    sb.auth.getSession().then(function(_s){var _tok=(_s.data&&_s.data.session&&_s.data.session.access_token)||'';return fetch(URL+'?days='+OWNER_DAYS,{headers:{Authorization:'Bearer '+_tok}}).then(function(r){return r.json();});}).then(function(d){
+      if(!d||d.error)return;var m=d.money||{},c=d.cogs||{},s=d.sms||{},v=d.visitors||{};
       function set(id,val,mut){var e=document.getElementById(id);if(e){e.textContent=val;e.classList.toggle('mut',!!mut);}}
       set('oWinRate',(m.appts?(m.winRate||0)+'%':'—'),!m.appts);
       set('oCostShow',(m.costPerShow!=null?'$'+m.costPerShow:'—'),m.costPerShow==null);
@@ -859,12 +859,12 @@
       var fun=document.getElementById('oFunnel');if(fun)fun.innerHTML=
         '<div class="fstep"><div class="fb" style="width:100%">'+msg.toLocaleString()+'</div><div class="fl"><b>Contacts messaged</b></div></div>'+
         '<div class="fstep"><div class="fb" style="width:'+fw(s.repliedMsg1)+'%">'+(s.repliedMsg1||0).toLocaleString()+'</div><div class="fl">Replied to Msg 1 · <b>'+(msg?Math.round(s.repliedMsg1/msg*100):0)+'%</b></div></div>'+
-        '<div class="fstep"><div class="fb" style="width:'+fw(s.repliedToOffer)+'%">'+(s.repliedToOffer||0).toLocaleString()+'</div><div class="fl">Replied to offer · <b>'+(msg?Math.round(s.repliedToOffer/msg*100):0)+'%</b></div></div>';
-      var ro=s.repliedToOffer||0,pos=s.positive||0,neg=s.negative||0,pmax=Math.max(pos,neg,1);
+        '<div class="fstep"><div class="fb" style="width:'+fw(s.offerSent)+'%">'+(s.offerSent||0).toLocaleString()+'</div><div class="fl">Offers sent · <b>'+(msg?Math.round(s.offerSent/msg*100):0)+'%</b></div></div>';
+      var pos=s.positive||0,neg=s.negative||0,pmax=Math.max(pos,neg,1);
       var pa=document.getElementById('oPath');if(pa)pa.innerHTML=
-        '<div class="hb"><span>Positive / interested</span><div class="tr"><i style="width:'+Math.round(pos/pmax*100)+'%;background:var(--good)"></i></div><span class="n">'+pos+'</span></div>'+
-        '<div class="hb"><span>Negative / not interested</span><div class="tr"><i style="width:'+Math.round(neg/pmax*100)+'%;background:var(--bad)"></i></div><span class="n">'+neg+'</span></div>'+
-        '<div class="cap" style="margin-top:12px">'+ro+' classified offer replies · '+(ro?Math.round(pos/ro*100):0)+'% positive</div>';
+        '<div class="hb"><span>Positive · warm leads → GHL</span><div class="tr"><i style="width:'+Math.round(pos/pmax*100)+'%;background:var(--good)"></i></div><span class="n">'+pos+'</span></div>'+
+        '<div class="hb"><span>Negative · not interested</span><div class="tr"><i style="width:'+Math.round(neg/pmax*100)+'%;background:var(--bad)"></i></div><span class="n">'+neg+'</span></div>'+
+        '<div class="cap" style="margin-top:12px">'+pos+' warm leads in GHL · '+neg+' marked not interested</div>';
       set('oVisits',(v.totalVisits||0).toLocaleString());set('oUnique',(v.uniqueVisitors||0).toLocaleString());
       set('oVLeads',(v.leads||0),!(v.leads>0));set('oToday',(v.visitsToday||0));
       var rows=v.visitors||[],vt=document.getElementById('oVisitorTbl');
