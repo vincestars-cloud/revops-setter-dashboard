@@ -106,7 +106,7 @@
   .kpi .top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
   .kpi .val{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:30px;font-weight:600;letter-spacing:-.02em;margin:10px 0 2px;line-height:1}
   .kpi .val small{font-size:15px;color:var(--ink-3);font-weight:500}
-  .kpi .val.good{color:var(--good)} .kpi .val.warn{color:var(--warn)} .kpi .val.bad{color:var(--bad)}
+  .kpi .val.good{color:var(--good)} .kpi .val.warn{color:var(--warn)} .kpi .val.bad{color:var(--bad)} .kpi .val.mut,.val.mut{color:var(--ink-2)}
   .delta{font-size:11.5px;font-weight:600;display:inline-flex;align-items:center;gap:3px}
   .delta.up{color:var(--good)} .delta.down{color:var(--bad)} .delta.flat{color:var(--ink-3)}
   .spark{width:100%;height:34px;margin-top:12px;display:block}
@@ -294,6 +294,7 @@
     <nav class="nav">
       <div class="sec">Dashboards</div>
       <div class="nlink active" data-view="setters"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v4H4z"/><path d="M6 8v12M18 8v12M9 12h6"/></svg>Appt Setters<span class="lock">Setters</span></div>
+      <div class="nlink" id="navOwner" data-view="owner" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M7 14l3-4 3 3 4-6"/></svg>Owner Metrics<span class="lock">Owner</span></div>
     </nav>
     <div class="who"><div class="av" id="whoAv">--</div><div style="flex:1;min-width:0"><b style="font-size:12.5px" id="whoName">--</b><small id="whoRole">--</small></div><button onclick="doLogout()" title="Log out" style="background:none;border:none;color:var(--ink-3);cursor:pointer;font-size:15px;padding:4px">⏻</button></div>
   </aside>
@@ -494,58 +495,54 @@
 
       <!-- ===== OWNER ===== -->
       <section class="view" id="view-owner">
+        <div class="section-h"><h2>Unit Economics</h2><span class="hint">Live · COGS from Telnyx + setter bonuses · revenue from GHL deal values</span></div>
         <div class="grid g4">
-          <div class="card kpi"><div class="top-row"><div class="eyebrow">Cash Collected</div><span class="delta up">▲ 12%</span></div><div class="val"><span class="pv" data-base="284900" data-fmt="moneyk">$284.9k</span></div></div>
-          <div class="card kpi"><div class="top-row"><div class="eyebrow">Gross Margin</div><span class="delta up">▲ 2.4pt</span></div><div class="val good">68<small>%</small></div></div>
-          <div class="card kpi"><div class="top-row"><div class="eyebrow">CAC</div><span class="delta up">▼ $38</span></div><div class="val">$412</div></div>
-          <div class="card kpi"><div class="top-row"><div class="eyebrow">AOV</div><span class="delta up">▲ $120</span></div><div class="val">$1,600</div></div>
+          <div class="card kpi"><div class="eyebrow">Win Rate</div><div class="val mut" id="oWinRate">—</div><div class="cap" style="margin-top:8px" id="oWinRateSub">clients ÷ appts booked</div></div>
+          <div class="card kpi"><div class="eyebrow">Cost / Show</div><div class="val mut" id="oCostShow">—</div><div class="cap" style="margin-top:8px">COGS ÷ appts shown</div></div>
+          <div class="card kpi"><div class="eyebrow">CAC</div><div class="val mut" id="oCac">—</div><div class="cap" style="margin-top:8px">COGS ÷ clients closed</div></div>
+          <div class="card kpi"><div class="eyebrow">Gross Margin</div><div class="val mut" id="oMargin">—</div><div class="cap" style="margin-top:8px">(revenue − COGS) ÷ revenue</div></div>
         </div>
         <div class="grid g4" style="margin-top:16px">
-          <div class="card kpi"><div class="eyebrow">Days to Close</div><div class="val">7.4<small>d</small></div><div class="cap" style="margin-top:8px">Lead → client</div></div>
-          <div class="card kpi"><div class="eyebrow">Days to First Result</div><div class="val">8.6<small>d</small></div><div class="cap" style="margin-top:8px">from GHL</div></div>
-          <div class="card kpi"><div class="eyebrow">Revenue / Employee</div><div class="val"><span class="pv" data-base="23700" data-fmt="moneyk">$23.7k</span></div><div class="cap" style="margin-top:8px">12 on payroll</div></div>
-          <div class="card kpi"><div class="eyebrow">Churn (monthly)</div><div class="val warn">4.1<small>%</small></div><div class="delta down" style="margin-top:8px">▲ 0.6pt</div></div>
+          <div class="card kpi"><div class="eyebrow">Revenue</div><div class="val mut" id="oRevenue">—</div><div class="cap" style="margin-top:8px">closed-client deal values</div></div>
+          <div class="card kpi"><div class="eyebrow">COGS</div><div class="val" id="oCogs">—</div><div class="cap" style="margin-top:8px" id="oCogsSub">acquisition cost to date</div></div>
+          <div class="card kpi"><div class="eyebrow">Clients</div><div class="val mut" id="oClients">—</div><div class="cap" style="margin-top:8px">'client' tag · GHL</div></div>
+          <div class="card kpi"><div class="eyebrow">Appts Booked</div><div class="val" id="oAppts">—</div><div class="cap" style="margin-top:8px">GHL pipeline</div></div>
         </div>
-        <div class="grid g2" style="margin-top:16px">
-          <div class="card"><h3>Gross Profit per Product</h3><div class="cap">Margin after delivery cost</div>
-            <div class="hbars" style="margin-top:16px">
-              <div class="hb"><span>DFY Growth Sys</span><div class="tr"><i style="width:100%;background:var(--c1)"></i></div><span class="n pv" data-base="112000" data-fmt="moneyk">$112k</span></div>
-              <div class="hb"><span>Setter Retainer</span><div class="tr"><i style="width:44%;background:var(--c3)"></i></div><span class="n pv" data-base="49000" data-fmt="moneyk">$49k</span></div>
-              <div class="hb"><span>Ads Mgmt</span><div class="tr"><i style="width:26%;background:var(--c2)"></i></div><span class="n pv" data-base="29000" data-fmt="moneyk">$29k</span></div>
-            </div>
-          </div>
-          <div class="card"><h3>Revenue at Risk</h3><div class="cap">MRR in accounts flagged low-engagement · from GHL</div>
-            <div class="ring-wrap" style="margin:16px 0 4px"><div class="ring" style="--v:18;--col:var(--warn)"><b>18%</b></div><div><div class="val mono warn" style="font-size:26px">$14.2k<small style="font-size:12px;color:var(--ink-3)"> MRR</small></div><div class="cap">across 9 accounts</div></div></div>
-          </div>
-        </div>
-        <div class="section-h"><h2>Accounts at Risk</h2><span class="hint">Low engagement · pulled from GHL closed clients</span></div>
-        <div class="card pad0"><table>
-          <thead><tr><th>Account</th><th>Industry</th><th class="num">MRR</th><th class="num">Days Since Login</th><th>Last Result</th><th>Status</th></tr></thead>
-          <tbody>
-            <tr><td class="nm">Glow Aesthetics</td><td>Med Spa</td><td class="num">$2,400</td><td class="num">21</td><td>14d ago</td><td><span class="pill r"><i></i>At risk</span></td></tr>
-            <tr><td class="nm">Peak Plumbing Co</td><td>Home Svc</td><td class="num">$1,800</td><td class="num">17</td><td>9d ago</td><td><span class="pill a"><i></i>Watch</span></td></tr>
-            <tr><td class="nm">BrightSmile Dental</td><td>Dental</td><td class="num">$2,100</td><td class="num">15</td><td>11d ago</td><td><span class="pill a"><i></i>Watch</span></td></tr>
-            <tr><td class="nm">Summit Chiro</td><td>Chiro</td><td class="num">$1,600</td><td class="num">28</td><td>19d ago</td><td><span class="pill r"><i></i>At risk</span></td></tr>
-          </tbody>
-        </table></div>
-        <div class="section-h"><h2>Outreach Engine — demo.scalingsos.com/admin</h2><span class="hint">Cold pipeline · live from Supabase</span></div>
+
+        <div class="section-h"><h2>SMS Outreach — demo.scalingsos.com/admin</h2><span class="hint">Cold pipeline · live from Supabase</span></div>
         <div class="grid g2">
           <div class="card"><h3>Message Path</h3><div class="cap">Contacts moving through the sequence</div>
-            <div class="funnel" style="margin-top:16px">
-              <div class="fstep"><div class="fb" style="width:100%"><span class="pv" data-base="8420" data-fmt="int">8,420</span></div><div class="fl"><b>Contacts messaged</b></div></div>
-              <div class="fstep"><div class="fb" style="width:64%"><span class="pv" data-base="3190" data-fmt="int">3,190</span></div><div class="fl">Replied to Msg 1 · <b>37.9%</b></div></div>
-              <div class="fstep"><div class="fb" style="width:38%"><span class="pv" data-base="1240" data-fmt="int">1,240</span></div><div class="fl">Replied to offer msg · <b>14.7%</b></div></div>
-            </div>
+            <div class="funnel" id="oFunnel" style="margin-top:16px"></div>
           </div>
-          <div class="card"><h3>Path Results</h3><div class="cap">Sentiment of offer-message replies</div>
-            <div class="donut-wrap" style="margin-top:14px">
-              <svg width="150" height="150" viewBox="0 0 42 42" id="pathDonut"></svg>
-              <div class="legend" style="flex:1">
-                <div class="li"><span class="sw" style="background:var(--good)"></span>Positive / interested<b class="pv" data-base="742" data-fmt="int">742</b></div>
-                <div class="li"><span class="sw" style="background:var(--c5)"></span>Neutral / later<b class="pv" data-base="318" data-fmt="int">318</b></div>
-                <div class="li"><span class="sw" style="background:var(--bad)"></span>Negative<b class="pv" data-base="180" data-fmt="int">180</b></div>
-              </div>
-            </div>
+          <div class="card"><h3>Offer Reply Results</h3><div class="cap">Sentiment of replies to the offer message</div>
+            <div class="hbars" id="oPath" style="margin-top:16px"></div>
+          </div>
+        </div>
+
+        <div class="section-h"><h2>Proposal Analytics — prep.solidbookedpro.com</h2><span class="hint">Every prep + per-client proposal visit · live</span></div>
+        <div class="grid g4">
+          <div class="card kpi"><div class="eyebrow">Total Page Visits</div><div class="val" id="oVisits">—</div></div>
+          <div class="card kpi"><div class="eyebrow">Unique Visitors</div><div class="val" id="oUnique">—</div></div>
+          <div class="card kpi"><div class="eyebrow">Leads</div><div class="val mut" id="oVLeads">—</div></div>
+          <div class="card kpi"><div class="eyebrow">Visits Today</div><div class="val" id="oToday">—</div></div>
+        </div>
+        <div class="card pad0" style="margin-top:16px;max-height:460px;overflow:auto"><table>
+          <thead style="position:sticky;top:0;background:var(--surface);z-index:2"><tr><th>Visitor</th><th class="num">Visits</th><th class="num">Time on Site</th><th>Area</th><th>Last Visit</th><th class="num">Scroll</th></tr></thead>
+          <tbody id="oVisitorTbl"><tr><td colspan="6" style="color:var(--ink-3);padding:18px 14px">Loading…</td></tr></tbody>
+        </table></div>
+
+        <div class="section-h"><h2>Industries</h2><span class="hint">Most interest (SMS) · most appts booked · most clients</span></div>
+        <div class="card pad0"><table>
+          <thead><tr><th>Industry</th><th class="num">SMS Interest</th><th class="num">Appts</th><th class="num">Clients</th></tr></thead>
+          <tbody id="oIndustryTbl"><tr><td colspan="4" style="color:var(--ink-3);padding:18px 14px">Loading…</td></tr></tbody>
+        </table></div>
+
+        <div class="grid g2" style="margin-top:6px">
+          <div class="card"><h3>Phone Objection Frequency</h3><div class="cap">Objections tagged on dialer calls · from GHL</div>
+            <div class="hbars" id="oObjections" style="margin-top:16px"></div>
+          </div>
+          <div class="card"><h3>COGS Breakdown</h3><div class="cap">Where each acquisition dollar goes</div>
+            <div class="hbars" id="oCogsBreak" style="margin-top:16px"></div>
           </div>
         </div>
       </section>
@@ -657,7 +654,7 @@
     document.querySelectorAll('.nlink').forEach(function(x){x.classList.remove('active')});l.classList.add('active');
     var v=l.dataset.view;document.querySelectorAll('.view').forEach(function(s){s.classList.remove('on')});
     document.getElementById('view-'+v).classList.add('on');
-    document.getElementById('vTitle').textContent=titles[v][0];document.getElementById('vSub').textContent=titles[v][1];
+    document.getElementById('vTitle').textContent=titles[v][0];document.getElementById('vSub').textContent=titles[v][1];if(v==='owner')loadOwner();
     document.getElementById('sidebar').classList.remove('open');window.scrollTo(0,0);});});
 
   // ---- Data ----
@@ -840,6 +837,47 @@
     teamGauge();gauge(32);donut();
   }
   function money(n){return '$'+(n/1000).toFixed(1)+'k'}
+  function oMoney(n){n=Number(n||0);return n>=1000?('$'+(n/1000).toFixed(1)+'k'):('$'+Math.round(n));}
+  function oDur(ms){ms=Number(ms||0);if(ms<1000)return '0s';var s=Math.round(ms/1000);if(s<60)return s+'s';var m=Math.floor(s/60),r=s%60;return m+'m '+(r<10?'0':'')+r+'s';}
+  function oArea(g){if(!g||typeof g!=='object')return '—';var a=[g.city,g.region||g.country].filter(Boolean);return a.length?a.slice(0,2).join(', '):(g.country||'—');}
+  function oDate(iso){if(!iso)return '—';var d=new Date(iso),n=new Date();if(d.toDateString()===n.toDateString())return 'Today '+d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});return d.toLocaleDateString([],{month:'short',day:'numeric'});}
+  function loadOwner(){var URL=OWNER_ENDPOINT;if(!URL)return;
+    fetch(URL+'?days='+OWNER_DAYS).then(function(r){return r.json();}).then(function(d){
+      if(!d)return;var m=d.money||{},c=d.cogs||{},s=d.sms||{},v=d.visitors||{};
+      function set(id,val,mut){var e=document.getElementById(id);if(e){e.textContent=val;e.classList.toggle('mut',!!mut);}}
+      set('oWinRate',(m.appts?(m.winRate||0)+'%':'—'),!m.appts);
+      set('oCostShow',(m.costPerShow!=null?'$'+m.costPerShow:'—'),m.costPerShow==null);
+      set('oCac',(m.cac!=null?'$'+m.cac:'—'),m.cac==null);
+      set('oMargin',(m.grossMargin!=null?m.grossMargin+'%':'—'),m.grossMargin==null);
+      set('oRevenue',oMoney(m.revenue),!(m.revenue>0));
+      set('oCogs',oMoney(c.total),false);
+      set('oClients',(m.clients||0),!(m.clients>0));
+      set('oAppts',(m.appts||0),false);
+      var wr=document.getElementById('oWinRateSub');if(wr)wr.textContent=(m.clients||0)+' clients ÷ '+(m.appts||0)+' appts';
+      var cs=document.getElementById('oCogsSub');if(cs)cs.textContent='SMS + LRN + '+(c.shows||0)+' shows × $'+(c.bonus||20);
+      var msg=s.contactsMessaged||0;function fw(n){return msg?Math.max(4,Math.round(n/msg*100)):0;}
+      var fun=document.getElementById('oFunnel');if(fun)fun.innerHTML=
+        '<div class="fstep"><div class="fb" style="width:100%">'+msg.toLocaleString()+'</div><div class="fl"><b>Contacts messaged</b></div></div>'+
+        '<div class="fstep"><div class="fb" style="width:'+fw(s.repliedMsg1)+'%">'+(s.repliedMsg1||0).toLocaleString()+'</div><div class="fl">Replied to Msg 1 · <b>'+(msg?Math.round(s.repliedMsg1/msg*100):0)+'%</b></div></div>'+
+        '<div class="fstep"><div class="fb" style="width:'+fw(s.repliedToOffer)+'%">'+(s.repliedToOffer||0).toLocaleString()+'</div><div class="fl">Replied to offer · <b>'+(msg?Math.round(s.repliedToOffer/msg*100):0)+'%</b></div></div>';
+      var ro=s.repliedToOffer||0,pos=s.positive||0,neg=s.negative||0,pmax=Math.max(pos,neg,1);
+      var pa=document.getElementById('oPath');if(pa)pa.innerHTML=
+        '<div class="hb"><span>Positive / interested</span><div class="tr"><i style="width:'+Math.round(pos/pmax*100)+'%;background:var(--good)"></i></div><span class="n">'+pos+'</span></div>'+
+        '<div class="hb"><span>Negative / not interested</span><div class="tr"><i style="width:'+Math.round(neg/pmax*100)+'%;background:var(--bad)"></i></div><span class="n">'+neg+'</span></div>'+
+        '<div class="cap" style="margin-top:12px">'+ro+' classified offer replies · '+(ro?Math.round(pos/ro*100):0)+'% positive</div>';
+      set('oVisits',(v.totalVisits||0).toLocaleString());set('oUnique',(v.uniqueVisitors||0).toLocaleString());
+      set('oVLeads',(v.leads||0),!(v.leads>0));set('oToday',(v.visitsToday||0));
+      var rows=v.visitors||[],vt=document.getElementById('oVisitorTbl');
+      if(vt)vt.innerHTML=rows.length?rows.map(function(x){return '<tr><td class="nm" style="font-family:var(--mono);font-size:12px">'+String(x.visitor_id).slice(0,10)+'</td><td class="num">'+x.visits+'</td><td class="num">'+(x.dwell_ms?oDur(x.dwell_ms):'—')+'</td><td>'+oArea(x.geo)+'</td><td>'+oDate(x.last_visit)+'</td><td class="num">'+(x.max_scroll?x.max_scroll+'%':'—')+'</td></tr>';}).join(''):'<tr><td colspan="6" style="color:var(--ink-3);padding:18px 14px">No visits yet</td></tr>';
+      var inds=d.industries||[],it=document.getElementById('oIndustryTbl');
+      if(it)it.innerHTML=inds.length?inds.map(function(i){return '<tr><td class="nm">'+i.label+'</td><td class="num">'+(i.interest||0)+'</td><td class="num">'+(i.appts||0)+'</td><td class="num">'+(i.clients?i.clients:'<span style=\'color:var(--ink-3)\'>0</span>')+'</td></tr>';}).join(''):'<tr><td colspan="4" style="color:var(--ink-3);padding:18px 14px">No data</td></tr>';
+      var objs=d.objections||[],omax=Math.max.apply(null,objs.map(function(o){return o.count;}).concat([1])),ob=document.getElementById('oObjections');
+      if(ob)ob.innerHTML=objs.length?objs.map(function(o){return '<div class="hb"><span style="font-size:11px">'+o.label+'</span><div class="tr"><i style="width:'+Math.round(o.count/omax*100)+'%;background:var(--c4)"></i></div><span class="n">'+o.count+'</span></div>';}).join(''):'<div class="cap">No objections logged yet</div>';
+      var tot=c.total||0,cb=document.getElementById('oCogsBreak');
+      function cbar(lab,val,col,sub){var w=tot?Math.max(2,Math.round(val/tot*100)):0;return '<div class="hb"><span>'+lab+(sub?' <span style=\'color:var(--ink-3);font-size:10px\'>'+sub+'</span>':'')+'</span><div class="tr"><i style="width:'+w+'%;background:'+col+'"></i></div><span class="n">$'+Number(val).toFixed(2)+'</span></div>';}
+      if(cb)cb.innerHTML=cbar('SMS / MMS',c.smsCost||0,'var(--c1)','recorded')+cbar('LRN lookups',c.lrnCost||0,'var(--c2)',(c.lrnCount||0).toLocaleString()+' × $'+(c.lrnUnit||0))+cbar('Setter bonuses',c.bonusCost||0,'var(--gold)',(c.shows||0)+' shows × $'+(c.bonus||20))+'<div class="hb" style="border-top:1px solid var(--line);margin-top:6px;padding-top:10px"><span><b>Total COGS</b></span><div class="tr" style="opacity:0"></div><span class="n"><b>$'+tot.toFixed(2)+'</b></span></div>';
+    }).catch(function(){});
+  }
   function flashUpdate(){['kAppts','kDials','kShow','kPph'].forEach(function(id){var e=document.getElementById(id);if(e){e.classList.remove('flash');void e.offsetWidth;e.classList.add('flash');}});var b=document.getElementById('board');if(b){b.classList.remove('flash');void b.offsetWidth;b.classList.add('flash');}}
 
   // ---- Drill-down (click a KPI -> underlying GHL contacts) ----
@@ -896,6 +934,7 @@
   // Set LIVE_ENDPOINT to the n8n webhook that returns { updatedAt, setters:[{nm,uid,appts,ns,won,hrs,act,dials,dc,wb,cb,aoc,tgt,cash,status,obj:{},disp:{}}] }.
   // n8n holds the GHL + Hubstaff secrets server-side and computes the formulas; this page only reads the result.
   var LIVE_ENDPOINT = "https://n8n.americanlifeteam.com/webhook/sbp-setter-metrics";
+  var OWNER_ENDPOINT = "https://n8n.americanlifeteam.com/webhook/sbp-owner-metrics", OWNER_DAYS=30;
   var PERIOD_DAYS = 7;
   var MONTHLY_TARGET = 36; // <-- filled once the n8n Setter-Metrics webhook is live
   function initials(n){return (n||"?").split(" ").map(function(w){return w[0]||""}).join("").slice(0,2).toUpperCase()}
@@ -937,10 +976,10 @@
   var CURRENT_ROLE="setter", APP_STARTED=false;
   function startApp(){ if(APP_STARTED)return; APP_STARTED=true;
     setTheme('dark');cart();gauge(32);donut();
-    if(LIVE_ENDPOINT){loadLive();setTimeout(function(){if(!window.__LIVE){renderAll();}var o=document.getElementById('loadov');if(o)o.classList.add('hide');},8000);setInterval(function(){window.__refresh=true;loadLive();},60000);}else{renderAll();var o=document.getElementById('loadov');if(o)o.classList.add('hide');}
+    if(LIVE_ENDPOINT){loadLive();setTimeout(function(){if(!window.__LIVE){renderAll();}var o=document.getElementById('loadov');if(o)o.classList.add('hide');},8000);setInterval(function(){window.__refresh=true;loadLive();var ov=document.getElementById('view-owner');if(ov&&ov.classList.contains('on'))loadOwner();},60000);}else{renderAll();var o=document.getElementById('loadov');if(o)o.classList.add('hide');}
     applyRole();
   }
-  function applyRole(){var own=(CURRENT_ROLE==='owner');var b=document.getElementById('targetsBtn');if(b)b.style.display=own?'':'none';var tb=document.getElementById('teamBtn');if(tb)tb.style.display=own?'':'none';}
+  function applyRole(){var own=(CURRENT_ROLE==='owner');var b=document.getElementById('targetsBtn');if(b)b.style.display=own?'':'none';var tb=document.getElementById('teamBtn');if(tb)tb.style.display=own?'':'none';var no=document.getElementById('navOwner');if(no)no.style.display=own?'':'none';}
   function setWho(nm,role){var n=document.getElementById('whoName');if(n)n.textContent=nm;var r=document.getElementById('whoRole');if(r)r.textContent=(role==='owner'?'Owner · full access':'Appointment Setter');var av=document.getElementById('whoAv');if(av)av.textContent=String(nm||'?').split(' ').map(function(w){return w[0]||'';}).join('').slice(0,2).toUpperCase();}
   function onAuthed(s){CURRENT_ROLE=((s.user&&s.user.user_metadata)||{}).role||'setter';setWho(((s.user&&s.user.user_metadata)||{}).name||s.user.email,CURRENT_ROLE);var lo=document.getElementById('loginov');if(lo)lo.classList.add('hide');startApp();applyRole();}
   function doLogin(){var e=document.getElementById('liEmail').value.trim();var pw=document.getElementById('liPass').value;var er=document.getElementById('liErr');er.textContent='Signing in...';sb.auth.signInWithPassword({email:e,password:pw}).then(function(r){if(r.error){er.textContent=r.error.message||'Sign-in failed';return;}er.textContent='';onAuthed(r.data.session);});}
