@@ -532,7 +532,8 @@
           <div class="card kpi"><div class="eyebrow">Leads</div><div class="val mut" id="oVLeads">—</div></div>
           <div class="card kpi"><div class="eyebrow">Visits Today</div><div class="val" id="oToday">—</div></div>
         </div>
-        <div class="card pad0" style="margin-top:16px;max-height:460px;overflow:auto"><table>
+        <div class="cap" id="oBotNote" style="margin:12px 2px 2px"></div>
+        <div class="card pad0" style="margin-top:10px;max-height:460px;overflow:auto"><table>
           <thead style="position:sticky;top:0;background:var(--surface);z-index:2"><tr><th>Visitor</th><th>Source</th><th class="num">Visits</th><th class="num">Time on Site</th><th>Area</th><th>Last Visit</th><th class="num">Scroll</th></tr></thead>
           <tbody id="oVisitorTbl"><tr><td colspan="7" style="color:var(--ink-3);padding:18px 14px">Loading…</td></tr></tbody>
         </table></div>
@@ -867,17 +868,19 @@
         '<div class="fstep"><div class="fb" style="width:'+fw(s.repliedMsg1)+'%">'+(s.repliedMsg1||0).toLocaleString()+'</div><div class="fl">Replied to Msg 1 · <b>'+(msg?Math.round(s.repliedMsg1/msg*100):0)+'%</b></div></div>'+
         '<div class="fstep"><div class="fb" style="width:'+fw(s.offerSent)+'%">'+(s.offerSent||0).toLocaleString()+'</div><div class="fl">Offers sent · <b>'+(msg?Math.round(s.offerSent/msg*100):0)+'%</b></div></div>';
       var pos=s.positive||0,neg=s.negative||0,pmax=Math.max(pos,neg,1);
-      var posPct=msg?Math.round(pos/msg*1000)/10:0,negPct=msg?Math.round(neg/msg*1000)/10:0;
+      var reach=s.uniqueDelivered||s.contactsMessaged||0;
+      var posPct=reach?Math.round(pos/reach*1000)/10:0,negPct=reach?Math.round(neg/reach*1000)/10:0;
       var pa=document.getElementById('oPath');if(pa)pa.innerHTML=
         '<div class="hb"><span>Positive · warm leads → GHL</span><div class="tr"><i style="width:'+Math.round(pos/pmax*100)+'%;background:var(--good)"></i></div><span class="n">'+pos+' <small style="color:var(--ink-3)">'+posPct+'%</small></span></div>'+
         '<div class="hb"><span>Negative · not interested</span><div class="tr"><i style="width:'+Math.round(neg/pmax*100)+'%;background:var(--bad)"></i></div><span class="n">'+neg+' <small style="color:var(--ink-3)">'+negPct+'%</small></span></div>'+
-        '<div class="cap" style="margin-top:12px">'+posPct+'% positive · '+negPct+'% negative — of '+msg.toLocaleString()+' contacts messaged</div>';
+        '<div class="cap" style="margin-top:12px">'+posPct+'% positive · '+negPct+'% negative — of '+reach.toLocaleString()+' unique contacts reached</div>';
       var pr=d.pathResults||{no_website:[],existing_website:[]};
       function prRow(x){return '<tr><td class="nm">'+x.path+'</td><td class="num">'+(x.delivered||0)+'</td><td class="num">'+(x.replied||0)+'</td><td class="num" style="color:var(--accent)">'+(x.replied_pct!=null?x.replied_pct:0)+'%</td><td class="num" style="color:var(--c3)">'+(x.msg2_reply_pct||0)+'%</td><td class="num" style="color:var(--gold)">'+(x.interested||0)+'</td><td class="num" style="color:var(--gold)">'+(x.interested_pct||0)+'%</td><td class="num">'+(x.offers||0)+'</td><td class="num" style="color:var(--good)">'+(x.clients||0)+'</td><td class="num" style="color:var(--bad)">'+(x.not_interested||0)+'</td><td class="num" style="color:var(--bad)">'+(x.not_interested_pct||0)+'%</td></tr>';}
       var pn=document.getElementById('oPathNo');if(pn)pn.innerHTML=(pr.no_website||[]).length?pr.no_website.map(prRow).join(''):'<tr><td colspan="11" style="color:var(--ink-3);padding:16px 14px">No data</td></tr>';
       var pex=document.getElementById('oPathExist');if(pex)pex.innerHTML=(pr.existing_website||[]).length?pr.existing_website.map(prRow).join(''):'<tr><td colspan="11" style="color:var(--ink-3);padding:16px 14px">No data</td></tr>';
       set('oVisits',(v.totalVisits||0).toLocaleString());set('oUnique',(v.uniqueVisitors||0).toLocaleString());
       set('oVLeads',(v.leads||0),!(v.leads>0));set('oToday',(v.visitsToday||0));
+      var bn=document.getElementById('oBotNote');if(bn){var bv=v.botVisits||0,bp=v.botPct||0,bc=(v.botCities||[]).slice(0,5).map(function(x){return x.city+' ('+x.n+')';}).join(' · ');bn.innerHTML=bv?('<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--warn)" stroke-width="2" style="vertical-align:-1px"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M12 8V4M9 14h.01M15 14h.01"/></svg> Bots / crawlers filtered out: <b style="color:var(--warn)">'+bv+'</b> ('+bp+'% of public traffic) · not counted above'+(bc?' · '+bc:'')):'No bot / crawler traffic detected in this window';}
       var rows=v.visitors||[],vt=document.getElementById('oVisitorTbl');
       if(vt)vt.innerHTML=rows.length?rows.map(function(x){return '<tr><td class="nm" style="font-family:var(--mono);font-size:12px">'+String(x.visitor_id).slice(0,10)+'</td><td>'+(x.source==='GitHub'?'<span class="pill a"><i></i>GitHub</span>':'<span class="pill b"><i></i>Direct</span>')+'</td><td class="num">'+x.visits+'</td><td class="num">'+(x.dwell_ms?oDur(x.dwell_ms):'—')+'</td><td>'+oArea(x.geo)+'</td><td>'+oDate(x.last_visit)+'</td><td class="num">'+(x.max_scroll?x.max_scroll+'%':'—')+'</td></tr>';}).join(''):'<tr><td colspan="7" style="color:var(--ink-3);padding:18px 14px">No visits yet</td></tr>';
       var inds=d.industries||[],it=document.getElementById('oIndustryTbl');
