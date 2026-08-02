@@ -526,6 +526,15 @@
         <div class="cap" style="margin:18px 2px 9px;color:var(--ink-2);font-weight:600">Existing Website</div>
         <div class="card pad0" style="overflow-x:auto"><table style="min-width:840px"><thead><tr><th>Path</th><th class="num">Delivered</th><th class="num">Replied</th><th class="num">Replied %</th><th class="num">Msg2 Reply %</th><th class="num">Interested</th><th class="num">Int %</th><th class="num">Offers</th><th class="num">Clients</th><th class="num">Not Int.</th><th class="num">Not Int %</th></tr></thead><tbody id="oPathExist"></tbody></table></div>
 
+        <div class="section-h"><h2>Cost Per Lead by Industry</h2><span class="hint">Live · CPL = messaging spend ÷ interested replies · post-demo hard signals · from demo.scalingsos.com/admin</span></div>
+        <div class="grid g4">
+          <div class="card kpi"><div class="eyebrow">Blended CPL</div><div class="val" id="oCplBlended">—</div><div class="cap" style="margin-top:8px">spend ÷ interested leads</div></div>
+          <div class="card kpi"><div class="eyebrow">Interested Leads</div><div class="val mut" id="oCplLeads">—</div><div class="cap" style="margin-top:8px">hard buying signals · after demo</div></div>
+          <div class="card kpi"><div class="eyebrow">Messaging Spend</div><div class="val" id="oCplSpend">—</div><div class="cap" style="margin-top:8px">SMS + MMS + inbound · Telnyx</div></div>
+          <div class="card kpi"><div class="eyebrow">Best CPL</div><div class="val mut" id="oCplBest">—</div><div class="cap" style="margin-top:8px" id="oCplBestSub">lowest-cost vertical</div></div>
+        </div>
+        <div class="card pad0" style="overflow-x:auto;margin-top:16px"><table style="min-width:720px"><thead><tr><th>Industry</th><th class="num">Out SMS</th><th class="num">MMS</th><th class="num">Inbound</th><th class="num">Spend</th><th class="num">Leads</th><th class="num">CPL</th></tr></thead><tbody id="oCplTbl"><tr><td colspan="7" style="color:var(--ink-3);padding:16px 14px">Loading…</td></tr></tbody></table></div>
+
         <div class="section-h"><h2>Proposal Analytics — prep.solidbookedpro.com <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink-3);font-size:12px">+ proposal.solidbookedpro.com proposals</span></h2><span class="hint">Every prep + per-client proposal visit · live</span></div>
         <div class="grid g4">
           <div class="card kpi"><div class="eyebrow">Total Page Visits</div><div class="val" id="oVisits">—</div></div>
@@ -535,8 +544,8 @@
         </div>
         <div class="cap" id="oBotNote" style="margin:12px 2px 2px"></div>
         <div class="card pad0" style="margin-top:10px;max-height:460px;overflow:auto"><table>
-          <thead style="position:sticky;top:0;background:var(--surface);z-index:2"><tr><th>Visitor</th><th>Source</th><th class="num">Visits</th><th class="num">Time on Site</th><th>Area</th><th>Last Visit</th><th class="num">Scroll</th></tr></thead>
-          <tbody id="oVisitorTbl"><tr><td colspan="7" style="color:var(--ink-3);padding:18px 14px">Loading…</td></tr></tbody>
+          <thead style="position:sticky;top:0;background:var(--surface);z-index:2"><tr><th>Visitor</th><th>Source</th><th>Page</th><th>Device</th><th class="num">Visits</th><th class="num">Time on Site</th><th>Area</th><th>Last Visit</th><th class="num">Scroll</th></tr></thead>
+          <tbody id="oVisitorTbl"><tr><td colspan="9" style="color:var(--ink-3);padding:18px 14px">Loading…</td></tr></tbody>
         </table></div>
 
         <div class="section-h"><h2>Industries</h2><span class="hint">Most interest (SMS) · most appts booked · most clients</span></div>
@@ -662,7 +671,7 @@
     document.querySelectorAll('.nlink').forEach(function(x){x.classList.remove('active')});l.classList.add('active');
     var v=l.dataset.view;document.querySelectorAll('.view').forEach(function(s){s.classList.remove('on')});
     document.getElementById('view-'+v).classList.add('on');
-    document.getElementById('vTitle').textContent=titles[v][0];document.getElementById('vSub').textContent=titles[v][1];if(v==='owner')loadOwner();
+    document.getElementById('vTitle').textContent=titles[v][0];document.getElementById('vSub').textContent=titles[v][1];if(v==='owner'){loadOwner();loadCpl();}
     document.getElementById('sidebar').classList.remove('open');window.scrollTo(0,0);});});
 
   // ---- Data ----
@@ -849,6 +858,19 @@
   function oDur(ms){ms=Number(ms||0);if(ms<1000)return '0s';var s=Math.round(ms/1000);if(s<60)return s+'s';var m=Math.floor(s/60),r=s%60;return m+'m '+(r<10?'0':'')+r+'s';}
   function oArea(g){if(!g||typeof g!=='object')return '—';var a=[g.city,g.region||g.country].filter(Boolean);return a.length?a.slice(0,2).join(', '):(g.country||'—');}
   function oDate(iso){if(!iso)return '—';var d=new Date(iso),n=new Date();if(d.toDateString()===n.toDateString())return 'Today '+d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});return d.toLocaleDateString([],{month:'short',day:'numeric'});}
+  function oPage(x){var p=String((x&&x.last_path)||''),h=String((x&&x.last_host)||'').replace(/^https?:\/\//,'');
+    var isProp=/solidbookedpro-proposal/.test(p)||/^proposal\./i.test(h);
+    var host=h||(isProp?'proposal.solidbookedpro.com':'prep.solidbookedpro.com');
+    var m=p.match(/\/p\/([^\/?#]+)/),label;
+    if(m){label=m[1].replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});}
+    else if(/solidbookedpro-proposal\/?$/.test(p))label='Proposal index';
+    else if(isProp&&(p===''||p==='/'))label='Proposal home';
+    else if(p===''||p==='/')label='Prep home';
+    else label=p;
+    return '<div style="max-width:230px;min-width:120px"><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+(host+p)+'">'+label+'</div><div style="font-size:10px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+host+'</div></div>';}
+  function oDevice(dv){dv=String(dv||'').toLowerCase();if(!dv)return '<span style="color:var(--ink-3)">—</span>';
+    var ic=dv==='mobile'?'<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18h2"/></svg>':dv==='tablet'?'<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M11 18h2"/></svg>':'<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/></svg>';
+    return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;white-space:nowrap">'+ic+dv.charAt(0).toUpperCase()+dv.slice(1)+'</span>';}
   function loadOwner(){var URL=OWNER_ENDPOINT;if(!URL||!sb)return;
     sb.auth.getSession().then(function(_s){var _tok=(_s.data&&_s.data.session&&_s.data.session.access_token)||'';return fetch(URL+'?days='+OWNER_DAYS,{headers:{Authorization:'Bearer '+_tok}}).then(function(r){return r.json();});}).then(function(d){
       if(!d||d.error)return;var m=d.money||{},c=d.cogs||{},s=d.sms||{},v=d.visitors||{};
@@ -883,7 +905,7 @@
       set('oVLeads',(v.leads||0),!(v.leads>0));set('oToday',(v.visitsToday||0));
       var bn=document.getElementById('oBotNote');if(bn){var bv=v.botVisits||0,bp=v.botPct||0,bc=(v.botCities||[]).slice(0,5).map(function(x){return x.city+' ('+x.n+')';}).join(' · ');bn.innerHTML=bv?('<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--warn)" stroke-width="2" style="vertical-align:-1px"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M12 8V4M9 14h.01M15 14h.01"/></svg> Bots / crawlers filtered out: <b style="color:var(--warn)">'+bv+'</b> ('+bp+'% of public traffic) · not counted above'+(bc?' · '+bc:'')):'No bot / crawler traffic detected in this window';}
       var rows=v.visitors||[],vt=document.getElementById('oVisitorTbl');
-      if(vt)vt.innerHTML=rows.length?rows.map(function(x){return '<tr><td class="nm" style="font-family:var(--mono);font-size:12px">'+String(x.visitor_id).slice(0,10)+'</td><td>'+(x.source==='GitHub'?'<span class="pill a"><i></i>GitHub</span>':'<span class="pill b"><i></i>Direct</span>')+'</td><td class="num">'+x.visits+'</td><td class="num">'+(x.dwell_ms?oDur(x.dwell_ms):'—')+'</td><td>'+oArea(x.geo)+'</td><td>'+oDate(x.last_visit)+'</td><td class="num">'+(x.max_scroll?x.max_scroll+'%':'—')+'</td></tr>';}).join(''):'<tr><td colspan="7" style="color:var(--ink-3);padding:18px 14px">No visits yet</td></tr>';
+      if(vt)vt.innerHTML=rows.length?rows.map(function(x){return '<tr><td class="nm" style="font-family:var(--mono);font-size:12px">'+String(x.visitor_id).slice(0,10)+'</td><td>'+(x.source==='GitHub'?'<span class="pill a"><i></i>GitHub</span>':'<span class="pill b"><i></i>Direct</span>')+'</td><td>'+oPage(x)+'</td><td>'+oDevice(x.device)+'</td><td class="num">'+x.visits+'</td><td class="num">'+(x.dwell_ms?oDur(x.dwell_ms):'—')+'</td><td>'+oArea(x.geo)+'</td><td>'+oDate(x.last_visit)+'</td><td class="num">'+(x.max_scroll?x.max_scroll+'%':'—')+'</td></tr>';}).join(''):'<tr><td colspan="9" style="color:var(--ink-3);padding:18px 14px">No visits yet</td></tr>';
       var inds=d.industries||[],it=document.getElementById('oIndustryTbl');
       if(it)it.innerHTML=inds.length?inds.map(function(i){return '<tr><td class="nm">'+i.label+'</td><td class="num">'+(i.interest||0)+'</td><td class="num">'+(i.appts||0)+'</td><td class="num">'+(i.clients?i.clients:'<span style=\'color:var(--ink-3)\'>0</span>')+'</td></tr>';}).join(''):'<tr><td colspan="4" style="color:var(--ink-3);padding:18px 14px">No data</td></tr>';
       var objs=d.objections||[],omax=Math.max.apply(null,objs.map(function(o){return o.count;}).concat([1])),ob=document.getElementById('oObjections');
@@ -891,6 +913,22 @@
       var tot=c.total||0,cb=document.getElementById('oCogsBreak');
       function cbar(lab,val,col,sub){var w=tot?Math.max(2,Math.round(val/tot*100)):0;return '<div class="hb"><span>'+lab+(sub?' <span style=\'color:var(--ink-3);font-size:10px\'>'+sub+'</span>':'')+'</span><div class="tr"><i style="width:'+w+'%;background:'+col+'"></i></div><span class="n">$'+Number(val).toFixed(2)+'</span></div>';}
       if(cb)cb.innerHTML=cbar('SMS / MMS',c.smsCost||0,'var(--c1)','recorded')+cbar('LRN lookups',c.lrnCost||0,'var(--c2)',(c.lrnCount||0).toLocaleString()+' × $'+(c.lrnUnit||0))+cbar('Setter bonuses',c.bonusCost||0,'var(--gold)',(c.shows||0)+' shows × $'+(c.bonus||20))+'<div class="hb" style="border-top:1px solid var(--line);margin-top:6px;padding-top:10px"><span><b>Total COGS</b></span><div class="tr" style="opacity:0"></div><span class="n"><b>$'+tot.toFixed(2)+'</b></span></div>';
+    }).catch(function(){});
+  }
+  function loadCpl(){var URL=CPL_ENDPOINT;if(!URL||!sb)return;
+    sb.auth.getSession().then(function(_s){var _t=(_s.data&&_s.data.session&&_s.data.session.access_token)||'';return fetch(URL+'?days='+OWNER_DAYS,{headers:{Authorization:'Bearer '+_t}}).then(function(r){return r.json();});}).then(function(rows){
+      if(!Array.isArray(rows))return;
+      function lbl(s){return String(s||'').replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});}
+      function setv(id,v,mut){var e=document.getElementById(id);if(e){e.textContent=v;e.classList.toggle('mut',!!mut);}}
+      var totSpend=0,totLeads=0,best=null;
+      rows.forEach(function(r){var sp=parseFloat(r.spend)||0,ld=parseInt(r.leads,10)||0,cpl=(r.cpl!=null&&r.cpl!=='')?parseFloat(r.cpl):null;totSpend+=sp;totLeads+=ld;if(cpl!=null&&(best===null||cpl<best.cpl))best={ind:r.industry,cpl:cpl};});
+      setv('oCplBlended',totLeads?'$'+(totSpend/totLeads).toFixed(2):'—',!totLeads);
+      setv('oCplLeads',totLeads,!totLeads);
+      setv('oCplSpend','$'+totSpend.toFixed(2));
+      setv('oCplBest',best?'$'+best.cpl.toFixed(2):'—',!best);
+      var bs=document.getElementById('oCplBestSub');if(bs)bs.textContent=best?lbl(best.ind):'lowest-cost vertical';
+      var tb=document.getElementById('oCplTbl');
+      if(tb)tb.innerHTML=rows.length?rows.map(function(r){var ld=parseInt(r.leads,10)||0,hasCpl=(r.cpl!=null&&r.cpl!=='');return '<tr><td class="nm">'+lbl(r.industry)+'</td><td class="num">'+(parseInt(r.out_sms,10)||0)+'</td><td class="num">'+(parseInt(r.out_mms,10)||0)+'</td><td class="num">'+(parseInt(r.inbound,10)||0)+'</td><td class="num">$'+(parseFloat(r.spend)||0).toFixed(2)+'</td><td class="num" style="color:var(--gold)">'+ld+'</td><td class="num" style="color:'+(hasCpl?'var(--good)':'var(--ink-3)')+'">'+(hasCpl?'$'+parseFloat(r.cpl).toFixed(2):'—')+'</td></tr>';}).join(''):'<tr><td colspan="7" style="color:var(--ink-3);padding:16px 14px">No data</td></tr>';
     }).catch(function(){});
   }
   function flashUpdate(){['kAppts','kDials','kShow','kPph'].forEach(function(id){var e=document.getElementById(id);if(e){e.classList.remove('flash');void e.offsetWidth;e.classList.add('flash');}});var b=document.getElementById('board');if(b){b.classList.remove('flash');void b.offsetWidth;b.classList.add('flash');}}
@@ -950,6 +988,7 @@
   // n8n holds the GHL + Hubstaff secrets server-side and computes the formulas; this page only reads the result.
   var LIVE_ENDPOINT = "https://n8n.americanlifeteam.com/webhook/sbp-setter-metrics";
   var OWNER_ENDPOINT = "https://n8n.americanlifeteam.com/webhook/sbp-owner-metrics", OWNER_DAYS=30;
+  var CPL_ENDPOINT = "https://n8n.americanlifeteam.com/webhook/sbp-cpl-metrics";
   var PERIOD_DAYS = 7;
   var MONTHLY_TARGET = 36; // <-- filled once the n8n Setter-Metrics webhook is live
   function initials(n){return (n||"?").split(" ").map(function(w){return w[0]||""}).join("").slice(0,2).toUpperCase()}
@@ -993,7 +1032,7 @@
     try{setTheme('dark');cart();gauge(32);donut();}catch(_e){}
     var _hideLoad=function(){var o=document.getElementById('loadov');if(o)o.classList.add('hide');};
     setTimeout(_hideLoad,7000);
-    if(LIVE_ENDPOINT){loadLive();setTimeout(function(){if(!window.__LIVE){renderAll();}_hideLoad();},8000);setInterval(function(){window.__refresh=true;loadLive();var ov=document.getElementById('view-owner');if(ov&&ov.classList.contains('on'))loadOwner();},60000);}else{renderAll();var o=document.getElementById('loadov');if(o)o.classList.add('hide');}
+    if(LIVE_ENDPOINT){loadLive();setTimeout(function(){if(!window.__LIVE){renderAll();}_hideLoad();},8000);setInterval(function(){window.__refresh=true;loadLive();var ov=document.getElementById('view-owner');if(ov&&ov.classList.contains('on')){loadOwner();loadCpl();}},60000);}else{renderAll();var o=document.getElementById('loadov');if(o)o.classList.add('hide');}
     applyRole();
   }
   function applyRole(){var own=(CURRENT_ROLE==='owner');var b=document.getElementById('targetsBtn');if(b)b.style.display=own?'':'none';var tb=document.getElementById('teamBtn');if(tb)tb.style.display=own?'':'none';var no=document.getElementById('navOwner');if(no)no.style.display=own?'':'none';}
