@@ -735,7 +735,7 @@
     var dim=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();return Math.min(d.getDate()/dim,1);}
   function projected(v){return Math.round(v/Math.max(elapsedFrac(),0.05))}
   var DAYSMAP={Today:1,Week:7,Month:30,Quarter:90};
-  document.querySelectorAll('#timeseg button').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('#timeseg button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');if(LIVE_ENDPOINT){PERIOD_DAYS=DAYSMAP[b.textContent]||7;loadLive();}else{applyPeriod(b.textContent);}})});
+  document.querySelectorAll('#timeseg button').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('#timeseg button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');if(LIVE_ENDPOINT){PERIOD_DAYS=DAYSMAP[b.textContent]||7;loadLive();var ov=document.getElementById('view-owner');if(ov&&ov.classList.contains('on')){loadOwner();loadCpl();}}else{applyPeriod(b.textContent);}})});
 
   // ---- Renderers ----
   function avatar(s,size,ring,medalIdx){
@@ -872,7 +872,7 @@
     var ic=dv==='mobile'?'<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18h2"/></svg>':dv==='tablet'?'<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M11 18h2"/></svg>':'<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/></svg>';
     return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;white-space:nowrap">'+ic+dv.charAt(0).toUpperCase()+dv.slice(1)+'</span>';}
   function loadOwner(){var URL=OWNER_ENDPOINT;if(!URL||!sb)return;
-    sb.auth.getSession().then(function(_s){var _tok=(_s.data&&_s.data.session&&_s.data.session.access_token)||'';return fetch(URL+'?days='+OWNER_DAYS,{headers:{Authorization:'Bearer '+_tok}}).then(function(r){return r.json();});}).then(function(d){
+    sb.auth.getSession().then(function(_s){var _tok=(_s.data&&_s.data.session&&_s.data.session.access_token)||'';return fetch(URL+'?days='+PERIOD_DAYS,{headers:{Authorization:'Bearer '+_tok}}).then(function(r){return r.json();});}).then(function(d){
       if(!d||d.error)return;var m=d.money||{},c=d.cogs||{},s=d.sms||{},v=d.visitors||{};
       function set(id,val,mut){var e=document.getElementById(id);if(e){e.textContent=val;e.classList.toggle('mut',!!mut);}}
       set('oWinRate',(m.appts?(m.winRate||0)+'%':'—'),!m.appts);
@@ -916,7 +916,7 @@
     }).catch(function(){});
   }
   function loadCpl(){var URL=CPL_ENDPOINT;if(!URL||!sb)return;
-    sb.auth.getSession().then(function(_s){var _t=(_s.data&&_s.data.session&&_s.data.session.access_token)||'';return fetch(URL+'?days='+OWNER_DAYS,{headers:{Authorization:'Bearer '+_t}}).then(function(r){return r.json();});}).then(function(rows){
+    sb.auth.getSession().then(function(_s){var _t=(_s.data&&_s.data.session&&_s.data.session.access_token)||'';return fetch(URL+'?days='+PERIOD_DAYS,{headers:{Authorization:'Bearer '+_t}}).then(function(r){return r.json();});}).then(function(rows){
       if(!Array.isArray(rows))return;
       function lbl(s){return String(s||'').replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});}
       function setv(id,v,mut){var e=document.getElementById(id);if(e){e.textContent=v;e.classList.toggle('mut',!!mut);}}
