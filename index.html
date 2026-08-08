@@ -526,10 +526,10 @@
         <div class="cap" style="margin:18px 2px 9px;color:var(--ink-2);font-weight:600">Existing Website</div>
         <div class="card pad0" style="overflow-x:auto"><table style="min-width:840px"><thead><tr><th>Path</th><th class="num">Delivered</th><th class="num">Replied</th><th class="num">Replied %</th><th class="num">Msg2 Reply %</th><th class="num">Interested</th><th class="num">Int %</th><th class="num">Offers</th><th class="num">Clients</th><th class="num">Not Int.</th><th class="num">Not Int %</th></tr></thead><tbody id="oPathExist"></tbody></table></div>
 
-        <div class="section-h"><h2>Cost Per Lead by Industry</h2><span class="hint">Live · CPL = messaging spend ÷ interested replies · post-demo hard signals · from demo.scalingsos.com/admin</span></div>
+        <div class="section-h"><h2>Cost Per Lead by Industry</h2><span class="hint">Live · CPL = messaging spend ÷ reviewed interested leads · leads windowed by demo-sent date · from demo.scalingsos.com/admin</span></div>
         <div class="grid g4">
           <div class="card kpi"><div class="eyebrow">Blended CPL</div><div class="val" id="oCplBlended">—</div><div class="cap" style="margin-top:8px">spend ÷ interested leads</div></div>
-          <div class="card kpi"><div class="eyebrow">Interested Leads</div><div class="val mut" id="oCplLeads">—</div><div class="cap" style="margin-top:8px">hard buying signals · after demo</div></div>
+          <div class="card kpi"><div class="eyebrow">Interested Leads</div><div class="val mut" id="oCplLeads">—</div><div class="cap" style="margin-top:8px" id="oCplLeadsSub">reviewed · after demo</div></div>
           <div class="card kpi"><div class="eyebrow">Messaging Spend</div><div class="val" id="oCplSpend">—</div><div class="cap" style="margin-top:8px">SMS + MMS + inbound · Telnyx</div></div>
           <div class="card kpi"><div class="eyebrow">Best CPL</div><div class="val mut" id="oCplBest">—</div><div class="cap" style="margin-top:8px" id="oCplBestSub">lowest-cost vertical</div></div>
         </div>
@@ -918,6 +918,10 @@
   function loadCpl(){var URL=CPL_ENDPOINT;if(!URL||!sb)return;
     sb.auth.getSession().then(function(_s){var _t=(_s.data&&_s.data.session&&_s.data.session.access_token)||'';return fetch(URL+'?days='+PERIOD_DAYS,{headers:{Authorization:'Bearer '+_t}}).then(function(r){return r.json();});}).then(function(rows){
       if(!Array.isArray(rows))return;
+      var _at=rows.filter(function(r){return r.industry==='_alltime_pipeline';})[0];
+      var alltime=_at?(parseInt(_at.leads,10)||0):0;
+      rows=rows.filter(function(r){return r.industry!=='_alltime_pipeline';});
+      var _ls=document.getElementById('oCplLeadsSub');if(_ls)_ls.textContent=alltime+' all-time qualified pipeline';
       function lbl(s){return String(s||'').replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});}
       function setv(id,v,mut){var e=document.getElementById(id);if(e){e.textContent=v;e.classList.toggle('mut',!!mut);}}
       var totSpend=0,totLeads=0,best=null;
